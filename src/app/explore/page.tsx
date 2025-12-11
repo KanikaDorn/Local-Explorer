@@ -1,56 +1,99 @@
 "use client";
-import React, { useEffect, useState } from "react";
-import Header from "@/components/Header";
 
-type Spot = {
-  id: string;
-  title: string;
-  slug?: string;
-  category?: string;
-  address?: string;
-  cover_url?: string;
-};
+import { useEffect, useState } from "react";
+import { SpotCard } from "@/components/SpotCard";
+import { SearchBar } from "@/components/SearchBar";
+import { FilterPanel } from "@/components/FilterPanel";
+import { getSpots, searchSpots } from "@/lib/spots";
+import { Spot } from "@/lib/types";
+import { Button } from "@/components/ui/button";
 
 export default function ExplorePage() {
   const [spots, setSpots] = useState<Spot[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filters, setFilters] = useState<{
+    category?: string;
+    tags?: string[];
+  }>({});
+
+  const categories = [
+    "cafe",
+    "restaurant",
+    "bar",
+    "museum",
+    "temple",
+    "shopping",
+    "outdoor",
+  ];
 
   useEffect(() => {
-    async function load() {
-      setLoading(true);
-      const res = await fetch("/api/example");
-      const json = await res.json();
-      setSpots(json.spots || []);
-      setLoading(false);
+    const fetchSpots = async () => {
+      setIsLoading(true);
+      try {
+        const data = await getSpots(100, 0, filters);
+        setSpots(data);
+      } catch (error) {
+        console.error("Error fetching spots:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchSpots();
+  }, [filters]);
+
+  const handleSearch = async (query: string) => {
+    setSearchQuery(query);
+    setIsLoading(true);
+    try {
+      if (query) {
+        const data = await searchSpots(query, 50);
+        setSpots(data);
+      } else {
+        const data = await getSpots(100, 0, filters);
+        setSpots(data);
+      }
+    } catch (error) {
+      console.error("Error searching:", error);
+    } finally {
+      setIsLoading(false);
     }
-    load();
-  }, []);
+  };
 
   return (
-    <div>
-      <Header />
-      <main className="mx-auto max-w-6xl p-4">
-        <h1 className="text-2xl font-semibold mb-4">Explore</h1>
-        {loading && <p>Loading...</p>}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {spots.map((s) => (
-            <article key={s.id} className="rounded border p-3">
-              {s.cover_url && (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={s.cover_url}
-                  alt={s.title}
-                  className="w-full h-40 object-cover rounded"
-                />
-              )}
-              <h2 className="mt-2 font-medium">{s.title}</h2>
-              <p className="text-sm text-slate-600">
-                {s.category} — {s.address}
-              </p>
-            </article>
-          ))}
+    <div className="max-w-7xl mx-auto px-4 py-8">
+      <div className="mb-8">
+        <h1 className="text-4xl font-bold mb-6">Explore Phnom Penh</h1>
+        <SearchBar onSearch={handleSearch} />
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        {/* Filters */}
+        <div className="lg:col-span-1">
+          <FilterPanel categories={categories} onFilterChange={setFilters} />
         </div>
-      </main>
+
+        {/* Spots Grid */}
+        <div className="lg:col-span-3">
+          {isLoading ? (
+            <div className="flex items-center justify-center h-96">
+              <p className="text-gray-500">Loading spots...</p>
+            </div>
+          ) : spots.length === 0 ? (
+            <div className="flex flex-col items-center justify-center h-96">
+              <p className="text-gray-500 mb-4">No spots found</p>
+              <Button onClick={() => handleSearch("")}>Clear Search</Button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {spots.map((spot) => (
+                <SpotCard key={spot.id} spot={spot} />
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }

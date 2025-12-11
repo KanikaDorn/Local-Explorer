@@ -1,71 +1,134 @@
-import fetch from "node-fetch";
+// Vertex AI and Gemini integration
+const PROJECT_ID = process.env.VERTEX_AI_PROJECT_ID || "";
+const LOCATION = process.env.VERTEX_AI_LOCATION || "us-central1";
+const GEMINI_API_KEY = process.env.GEMINI_AI_API_KEY || "";
 
-const PROJECT_ID = process.env.VERTEX_PROJECT_ID || "";
-const LOCATION = process.env.VERTEX_LOCATION || "us-central1";
-const API_KEY = process.env.VERTEX_API_KEY || "";
-const EMBEDDING_MODEL =
-  process.env.VERTEX_EMBEDDING_MODEL || "textembedding-gecko";
-const GEN_MODEL = process.env.VERTEX_GEN_MODEL || "gemini-1.5";
+// Using Gemini API directly instead of Vertex for simplicity
+const GEMINI_API_URL =
+  "https://generativelanguage.googleapis.com/v1beta/models";
 
-if (!PROJECT_ID) {
-  // not throwing here to keep dev machine flexibility; functions will check keys
-}
-
-function makeUrl(model: string) {
-  // Vertex AI predict endpoint (publisher models)
-  // NOTE: This URL pattern may need adjusting per Google/Vertex API changes.
-  return `https://${LOCATION}-aiplatform.googleapis.com/v1/projects/${PROJECT_ID}/locations/${LOCATION}/publishers/google/models/${model}:predict?key=${API_KEY}`;
-}
-
-export async function embedText(text: string) {
-  if (!API_KEY) throw new Error("Missing VERTEX_API_KEY");
-  const url = makeUrl(EMBEDDING_MODEL);
-  const body = {
-    instances: [{ content: text }],
-    parameters: { embedding: true },
-  };
-  const res = await fetch(url, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-  });
-  if (!res.ok) {
-    const txt = await res.text();
-    throw new Error(`Vertex embed error: ${res.status} ${txt}`);
+export async function embedText(text: string): Promise<number[]> {
+  if (!GEMINI_API_KEY) {
+    throw new Error("Missing GEMINI_AI_API_KEY");
   }
-  const json = await res.json();
-  // The response shape can vary; try to be resilient
-  const emb =
-    json?.predictions?.[0]?.embedding ||
-    json?.predictions?.[0]?.output?.embeddings ||
-    json?.predictions?.[0];
-  if (!emb) throw new Error("No embedding in Vertex response");
-  // Ensure the embedding is a float array
-  if (Array.isArray(emb)) return emb;
-  if (Array.isArray(emb?.embedding)) return emb.embedding;
-  return emb;
+
+  // Using Gemini's embedding model
+  const url = `${GEMINI_API_URL}/embedding-001:embedContent?key=${GEMINI_API_KEY}`;
+
+  try {
+    const response = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "models/embedding-001",
+        content: {
+          parts: [{ text }],
+        },
+      }),
+    });
+
+    if (!response.ok) {
+      const error = await response.text();
+      throw new Error(`Gemini embedding error: ${response.status} ${error}`);
+    }
+
+    const data: any = await response.json();
+    return data?.embedding?.values || [];
+  } catch (error) {
+    console.error("Error generating embedding:", error);
+    throw error;
+  }
 }
 
-export async function generateText(prompt: string, options: any = {}) {
-  if (!API_KEY) throw new Error("Missing VERTEX_API_KEY");
-  const url = makeUrl(GEN_MODEL);
-  const body = {
-    instances: [{ content: prompt }],
-    parameters: {
-      maxOutputTokens: options.maxOutputTokens || 512,
-      temperature: options.temperature || 0.2,
-    },
-  };
-  const res = await fetch(url, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-  });
-  if (!res.ok) {
-    const txt = await res.text();
-    throw new Error(`Vertex generate error: ${res.status} ${txt}`);
+export async function generateText(
+  prompt: string,
+  options: {
+    maxOutputTokens?: number;
+    temperature?: number;
+    model?: string;
+  } = {}
+): Promise<string> {
+  if (!GEMINI_API_KEY) {
+    throw new Error("Missing GEMINI_AI_API_KEY");
   }
-  const json = await res.json();
-  const out = json?.predictions?.[0]?.content || json?.predictions?.[0];
-  return typeof out === "string" ? out : JSON.stringify(out);
+
+  const model = options.model || "gemini-1.5-flash";
+  const url = `${GEMINI_API_URL}/${model}:generateContent?key=${GEMINI_API_KEY}`;
+
+  try {
+    const response = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        contents: [
+          {
+            parts: [
+              {
+                text: prompt,
+              },
+            ],
+          },
+        ],
+        generationConfig: {
+          maxOutputTokens: options.maxOutputTokens || 1024,
+          temperature: options.temperature || 0.7,
+        },
+      }),
+    });
+
+    if (!response.ok) {
+      const error = await response.text();
+      throw new Error(`Gemini generation error: ${response.status} ${error}`);
+    }
+
+    const data: any = await response.json();
+    const textContent = data?.candidates?.[0]?.content?.parts?.[0]?.text || "";
+    return textContent;
+  } catch (error) {
+    console.error("Error generating text:", error);
+    throw error;
+  }
+}
+
+export async function generateItineraryFromPreferences(
+  preferences: Record<string, any>
+): Promise<any> {
+  const prompt = `
+    Create a weekend itinerary in Phnom Penh with the following preferences:
+    - Theme: ${preferences.theme || "Local Exploration"}
+    - Party Size: ${preferences.party || "Solo"}
+    - Budget: ${preferences.budget || "Medium ($30-50/day)"}
+    - Interests: ${
+      Array.isArray(preferences.interests)
+        ? preferences.interests.join(", ")
+        : "General"
+    }
+    
+    Please provide a structured itinerary with:
+    1. Title
+    2. Overview
+    3. Day-by-day schedule with specific times
+    4. Restaurant recommendations
+    5. Transportation tips
+    6. Budget breakdown
+    
+    Format as JSON with clear structure.
+  `;
+
+  try {
+    const result = await generateText(prompt, {
+      maxOutputTokens: 1500,
+      temperature: 0.8,
+    });
+
+    // Try to parse as JSON, fallback to text
+    try {
+      return JSON.parse(result);
+    } catch {
+      return { text: result };
+    }
+  } catch (error) {
+    console.error("Error generating itinerary:", error);
+    throw error;
+  }
 }

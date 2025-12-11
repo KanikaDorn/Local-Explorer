@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import Navbar from "@/components/Navbar";
+import Header from "@/components/Header";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -14,8 +14,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "LocalExplore — Phnom Penh experiences",
-  description: "AI-powered local experiences hub for Phnom Penh",
+  title: "LocalExplore — Your Weekend, Planned in Minutes",
+  description:
+    "AI-powered platform to discover and plan experiences in Cambodia",
 };
 
 export default function RootLayout({
@@ -25,12 +26,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className="bg-zinc-50 dark:bg-black font-sans min-h-screen">
+      <body
+        className={`${geistSans.variable} ${geistMono.variable} bg-white dark:bg-black font-sans min-h-screen`}
+      >
         <div className="flex flex-col min-h-screen">
-          <Navbar />
-          <main className="flex-1 w-full max-w-5xl mx-auto px-4 py-8">
-            {children}
-          </main>
+          <Header />
+          <main className="flex-1 w-full">{children}</main>
         </div>
       </body>
     </html>
