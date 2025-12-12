@@ -1,7 +1,18 @@
 import { supabaseBrowser } from "./supabaseClient";
 import { Itinerary } from "./types";
 
+const IS_SUPABASE_CONFIGURED = Boolean(
+  process.env.NEXT_PUBLIC_SUPABASE_URL &&
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+);
+
 export async function getItineraries(profileId: string, limit: number = 20) {
+  if (!IS_SUPABASE_CONFIGURED) {
+     const raw = typeof window !== "undefined" ? localStorage.getItem("localexplore_itineraries") : null;
+     const all: Itinerary[] = raw ? JSON.parse(raw) : [];
+     return all.filter(i => i.profile_id === profileId).sort((a,b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()).slice(0, limit);
+  }
+
   try {
     const { data, error } = await supabaseBrowser
       .from("itineraries")
@@ -17,11 +28,19 @@ export async function getItineraries(profileId: string, limit: number = 20) {
     return data as Itinerary[];
   } catch (error) {
     console.error("Error fetching itineraries:", error);
-    throw error;
+    // Fallback to local if error (e.g. connection issue)
+    const raw = typeof window !== "undefined" ? localStorage.getItem("localexplore_itineraries") : null;
+    return raw ? JSON.parse(raw).filter((i: any) => i.profile_id === profileId) : [];
   }
 }
 
 export async function getItineraryById(itineraryId: string) {
+  if (!IS_SUPABASE_CONFIGURED) {
+    const raw = typeof window !== "undefined" ? localStorage.getItem("localexplore_itineraries") : null;
+    const all: Itinerary[] = raw ? JSON.parse(raw) : [];
+    return all.find(i => i.id === itineraryId) as Itinerary;
+  }
+
   try {
     const { data, error } = await supabaseBrowser
       .from("itineraries")
@@ -35,8 +54,9 @@ export async function getItineraryById(itineraryId: string) {
 
     return data as Itinerary;
   } catch (error) {
-    console.error("Error fetching itinerary:", error);
-    throw error;
+     const raw = typeof window !== "undefined" ? localStorage.getItem("localexplore_itineraries") : null;
+     const all: Itinerary[] = raw ? JSON.parse(raw) : [];
+     return all.find(i => i.id === itineraryId) as Itinerary;
   }
 }
 
@@ -47,6 +67,24 @@ export async function createItinerary(
   itineraryData: any,
   model: string = "localexplore-v1"
 ) {
+  const newItinerary: Partial<Itinerary> = {
+      id: `local_plan_${Date.now()}`,
+      profile_id: profileId,
+      title,
+      description,
+      itinerary: itineraryData,
+      model,
+      created_at: new Date().toISOString(),
+  };
+
+  if (!IS_SUPABASE_CONFIGURED) {
+      const raw = typeof window !== "undefined" ? localStorage.getItem("localexplore_itineraries") : null;
+      const all = raw ? JSON.parse(raw) : [];
+      all.push(newItinerary);
+      if (typeof window !== "undefined") localStorage.setItem("localexplore_itineraries", JSON.stringify(all));
+      return newItinerary as Itinerary;
+  }
+
   try {
     const { data, error } = await supabaseBrowser
       .from("itineraries")
@@ -61,13 +99,24 @@ export async function createItinerary(
       .single();
 
     if (error) {
-      throw new Error(`Failed to create itinerary: ${error.message}`);
+       // Fallback to local on error
+       console.warn("Supabase insert failed, falling back to local");
+       const raw = typeof window !== "undefined" ? localStorage.getItem("localexplore_itineraries") : null;
+       const all = raw ? JSON.parse(raw) : [];
+       all.push(newItinerary);
+       if (typeof window !== "undefined") localStorage.setItem("localexplore_itineraries", JSON.stringify(all));
+       return newItinerary as Itinerary;
     }
 
     return data as Itinerary;
   } catch (error) {
     console.error("Error creating itinerary:", error);
-    throw error;
+    // Fallback
+    const raw = typeof window !== "undefined" ? localStorage.getItem("localexplore_itineraries") : null;
+     const all = raw ? JSON.parse(raw) : [];
+     all.push(newItinerary);
+     if (typeof window !== "undefined") localStorage.setItem("localexplore_itineraries", JSON.stringify(all));
+     return newItinerary as Itinerary;
   }
 }
 

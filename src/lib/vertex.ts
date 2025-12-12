@@ -32,7 +32,12 @@ export async function embedText(text: string): Promise<number[]> {
       throw new Error(`Gemini embedding error: ${response.status} ${error}`);
     }
 
-    const data: any = await response.json();
+    interface EmbeddingResponse {
+      embedding?: {
+        values: number[];
+      };
+    }
+    const data = await response.json() as EmbeddingResponse;
     return data?.embedding?.values || [];
   } catch (error) {
     console.error("Error generating embedding:", error);
@@ -81,7 +86,16 @@ export async function generateText(
       throw new Error(`Gemini generation error: ${response.status} ${error}`);
     }
 
-    const data: any = await response.json();
+    interface GeminiResponse {
+      candidates?: Array<{
+        content?: {
+          parts?: Array<{
+            text?: string;
+          }>;
+        };
+      }>;
+    }
+    const data = await response.json() as GeminiResponse;
     const textContent = data?.candidates?.[0]?.content?.parts?.[0]?.text || "";
     return textContent;
   } catch (error) {
@@ -91,8 +105,8 @@ export async function generateText(
 }
 
 export async function generateItineraryFromPreferences(
-  preferences: Record<string, any>
-): Promise<any> {
+  preferences: Record<string, unknown>
+): Promise<Record<string, unknown> | { text: string }> {
   const prompt = `
     Create a weekend itinerary in Phnom Penh with the following preferences:
     - Theme: ${preferences.theme || "Local Exploration"}

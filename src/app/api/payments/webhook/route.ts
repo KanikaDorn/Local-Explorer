@@ -1,32 +1,97 @@
-import { NextResponse } from "next/server";
-import { createSupabaseServiceRole } from "@/lib/supabaseClient";
+import { NextRequest, NextResponse } from "next/server";
+import { createClient } from "@supabase/supabase-js";
 
-export async function POST(req: Request) {
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+);
+
+export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const supabase = createSupabaseServiceRole();
 
-    // Expected webhook shape depends on provider. We accept generic fields here.
-    const payment = {
-      profile_id: body.profile_id || null,
-      subscription_id: body.subscription_id || null,
-      provider: body.provider || body.source || "unknown",
-      provider_ref: body.provider_ref || body.id || null,
-      amount: body.amount || null,
-      currency: body.currency || null,
-      status: body.status || "unknown",
-      raw_response: body,
-    };
+    // Support both new and existing webhook formats
+    const provider = body.provider || body.source || "unknown";
+    const transactionId = body.provider_ref || body.id || body.transactionId;
+    const status = body.status || "unknown";
+    const amount = body.amount;
 
-    const { data, error } = await supabase
-      .from("payments")
-      .insert(payment)
-      .select("*")
-      .single();
-    if (error) {
-      console.error("payments insert error", error);
-      return NextResponse.json({ error: error.message }, { status: 500 });
+    if (!transactionId) {
+      return NextResponse.json(
+        { success: false, error: "Missing transaction ID" },
+        { status: 400 }
+      );
     }
+
+    // Try to find existing payment
+    let payment = await supabase
+      .from("payments")
+      .select("*")
+      .eq("provider_ref", transactionId)
+      .single()
+      .then((r) => r.data)
+      .catch(() => null);
+
+    // Map webhook status to our status
+    const mappedStatus =
+      status === "success" || status === "completed"
+        ? "completed"
+        : status === "failed"
+        ? "failed"
+        : "pending";
+
+    if (payment) {
+      // Update existing payment
+      await supabase
+        .from("payments")
+        .update({
+          status: mappedStatus,
+          raw_response: body,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", payment.id);
+
+      // If payment is completed, update subscription status
+      if (mappedStatus === "completed" && payment.subscription_id) {
+        await supabase
+          .from("subscriptions")
+          .update({
+            status: "active",
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", payment.subscription_id);
+      }
+    } else {
+      // Create new payment record
+      const newPayment = {
+        profile_id: body.profile_id || null,
+        subscription_id: body.subscription_id || null,
+        provider,
+        provider_ref: transactionId,
+        amount,
+        currency: body.currency || "USD",
+        status: mappedStatus,
+        raw_response: body,
+      };
+
+      await supabase.from("payments").insert(newPayment);
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: "Webhook processed successfully",
+    });
+  } catch (error) {
+    console.error("Error processing webhook:", error);
+    return NextResponse.json(
+      {
+        success: false,
+        error: error instanceof Error ? error.message : "Unknown error",
+      },
+      { status: 500 }
+    );
+  }
+}
 
     // Update subscription status if provided
     if (body.subscription_id && body.status === "confirmed") {
