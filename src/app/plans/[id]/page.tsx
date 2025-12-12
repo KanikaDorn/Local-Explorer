@@ -2,19 +2,17 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Itinerary } from "@/lib/types";
+import { useParams } from "next/navigation";
+import { Itinerary, ItineraryStop } from "@/lib/types";
 import { getItineraryById } from "@/lib/itineraries";
 import apiFetch from "@/lib/apiClient";
 import { Button } from "@/components/ui/button";
 import { formatDate } from "@/lib/utils";
 import { Clock, MapPin, Share2, Copy, ArrowLeft } from "lucide-react";
 
-interface Props {
-  params: { id: string };
-}
-
-export default function ItineraryPage({ params }: Props) {
-  const { id } = params;
+export default function ItineraryPage() {
+  const params = useParams();
+  const id = params?.id as string;
   const router = useRouter();
   const [itinerary, setItinerary] = useState<Itinerary | null>(null);
   const [loading, setLoading] = useState(true);
@@ -22,12 +20,15 @@ export default function ItineraryPage({ params }: Props) {
   const [creating, setCreating] = useState(false);
 
   useEffect(() => {
+    if (!id) return;
     const load = async () => {
       try {
+        console.log("Loading itinerary for ID:", id);
         const data = await getItineraryById(id);
+        console.log("Loaded itinerary:", data);
         setItinerary(data);
       } catch (err) {
-        console.error(err);
+        console.error("Error loading itinerary:", err);
       } finally {
         setLoading(false);
       }
@@ -42,10 +43,11 @@ export default function ItineraryPage({ params }: Props) {
       const res = await apiFetch(`/api/itineraries/${id}/share`, {
         method: "POST",
       });
-      if ((res as any)?.share?.url) {
-        setShareUrl((res as any).share.url);
-      } else if ((res as any)?.error) {
-        alert((res as any).error);
+      const data = res as { share?: { url: string }, error?: string };
+      if (data?.share?.url) {
+        setShareUrl(data.share.url);
+      } else if (data?.error) {
+        alert(data.error);
       }
     } catch (err) {
       console.error(err);
@@ -133,7 +135,7 @@ export default function ItineraryPage({ params }: Props) {
         {/* Timeline */}
         <div className="space-y-8 relative before:absolute before:inset-0 before:ml-5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-slate-300 before:to-transparent">
           
-          {(itinerary.itinerary?.stops || []).map((stop: any, index: number) => (
+          {(itinerary.itinerary?.stops || []).map((stop: ItineraryStop) => (
             <div key={stop.order} className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
                 
                 {/* Icon Marker */}

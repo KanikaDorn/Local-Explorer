@@ -8,7 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Sparkles, Loader2, MapPin, DollarSign, Calendar, Heart } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { createItinerary } from "@/lib/itineraries";
-import { getCurrentUser } from "@/lib/auth"; // You might need to adjust this import based on your auth setup
+import { getCurrentUser, getUserProfile } from "@/lib/auth";
 import { toast } from "@/hooks/use-toast"; // Assuming you have a toast hook
 
 export default function GeneratePlanPage() {
@@ -93,8 +93,11 @@ export default function GeneratePlanPage() {
         };
 
         // Save to DB
+        const profile = await getUserProfile(user.id);
+
+        // Save to DB
         const newItinerary = await createItinerary(
-            user.id,
+            profile?.id || user.id,
             mockPlan.title,
             mockPlan.description,
             mockPlan
@@ -151,7 +154,7 @@ export default function GeneratePlanPage() {
                 {/* Theme/Mood */}
                 <div className="space-y-3">
                   <label className="text-sm font-medium flex items-center gap-2">
-                    <Heart className="h-4 w-4 text-blue-500" /> What's your vibe?
+                    <Heart className="h-4 w-4 text-blue-500" /> What&apos;s your vibe?
                   </label>
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                     {moodOptions.map((option) => (
