@@ -138,69 +138,87 @@ export default function PartnerSubscriptions() {
   }, []);
 
   const handleUpgrade = async (planId: string) => {
+    console.log("Starting upgrade for plan:", planId);
     setUpgrading((prev) => ({ ...prev, [planId]: true }));
     try {
       if (!user) {
+        console.warn("User not logged in");
         addToast({ message: "Please log in first" });
         return;
       }
 
-      const userDetails = {
-        firstName: user.user_metadata?.full_name?.split(" ")[0] || "Partner",
-        lastName: user.user_metadata?.full_name?.split(" ").slice(1).join(" ") || "",
-        email: user.email,
-        phone: user.user_metadata?.phone || "",
-        id: user.id
-      };
-
-      const res = await apiFetch("/api/partner/subscriptions/upgrade", {
+      // 1. Create Subscription Intent
+      console.log("Creating subscription intent...");
+      const intentRes = await apiFetch("/api/partner/subscriptions/intent", {
         method: "POST",
-        body: JSON.stringify({ planId, user: userDetails }),
+        body: JSON.stringify({ planId, interval: "month" }),
       });
 
-      if (res?.success && res.data?.payload) {
-        const { payload, url } = res.data;
-        addToast({
-          message: "Redirecting to PayWay...",
+      console.log("Intent Response:", intentRes);
+
+      if (!intentRes?.success) {
+          throw new Error(intentRes?.error || "Failed to create subscription");
+      }
+      
+      const { subscriptionId, amount } = intentRes.data;
+      console.log("Subscription created:", subscriptionId);
+
+      // 2. Initialize Card Linking (CoF)
+      console.log("Initializing Card Linking...");
+      const cofRes = await apiFetch("/api/payway/cards/initial", {
+          method: "POST",
+          body: JSON.stringify({ subscriptionId })
+      });
+      
+      console.log("CoF Response:", cofRes);
+
+      if (!cofRes?.success) {
+           throw new Error(cofRes?.error || "Failed to initialize card payment");
+      }
+
+      const { actionUrl, fields } = cofRes.data;
+
+      addToast({
+          message: "Opening secure payment window...",
           duration: 2000,
-        });
+      });
 
-        // Create a hidden form and submit it to PayWay
-        const form = document.createElement("form");
-        form.method = "POST";
-        form.action = url;
-        // form.target = "_blank"; // Optional: open in new tab
-
-        // Add fields
-        Object.keys(payload).forEach((key) => {
+      // 3. Submit Form to PayWay (Hidden Form)
+      console.log("Submitting form to:", actionUrl);
+      const form = document.createElement("form");
+      form.method = "POST";
+      form.action = actionUrl; 
+      
+      Object.keys(fields).forEach((key) => {
           const input = document.createElement("input");
           input.type = "hidden";
           input.name = key;
-          input.value = payload[key as keyof typeof payload];
+          input.value = fields[key];
           form.appendChild(input);
-        });
+          
+          if (key === 'ctid') {
+             console.log("CTID being sent to PayWay:", fields[key]);
+          }
+      });
 
-        document.body.appendChild(form);
-        form.submit();
-        
-        // Cleanup? Form submission usually navigates away.
-      } else {
-        addToast({
-          message: res?.error || "Failed to initiate payment",
-          duration: 3000,
-        });
-      }
-    } catch (err) {
+      document.body.appendChild(form);
+      
+      // Delay submit slightly to allow logs to flush and detach from current microtask
+      setTimeout(() => {
+          form.submit();
+      }, 100);
+
+    } catch (err: any) {
       console.error("Error upgrading:", err);
+      // Fallback alert ensures the user sees something went wrong
+      // alert(`Error: ${err.message || "Something went wrong"}`); 
       addToast({
-        message: "Error upgrading plan",
+        message: err.message || "Error upgrading plan",
         duration: 3000,
       });
     } finally {
-      // Keep loading state if we are redirecting
-      // setUpgrading((prev) => ({ ...prev, [planId]: false })); 
-      // Actually, if it fails, we should reset. If success, we navigate away.
-      setTimeout(() => setUpgrading((prev) => ({ ...prev, [planId]: false })), 3000);
+        // Reset state only on error. Success navigates away.
+        setTimeout(() => setUpgrading((prev) => ({ ...prev, [planId]: false })), 3000);
     }
   };
 
@@ -233,13 +251,13 @@ export default function PartnerSubscriptions() {
               <div className="space-y-2 text-sm">
                 <p className="text-blue-700">
                   📅 Started:{" "}
-                  {new Date(currentSubscription.startDate).toLocaleDateString()}
+                  {new Date(currentSubscription.startDate).toLocaleDateString("en-US")}
                 </p>
                 <p className="text-blue-700">
                   🔄 Renews:{" "}
                   {new Date(
                     currentSubscription.renewalDate
-                  ).toLocaleDateString()}
+                  ).toLocaleDateString("en-US")}
                 </p>
                 <p className="text-blue-700">
                   {currentSubscription.autoRenew
@@ -303,18 +321,25 @@ export default function PartnerSubscriptions() {
                   Current Plan
                 </Button>
               ) : (
-                <Button
-                  onClick={() => handleUpgrade(plan.id)}
-                  disabled={upgrading[plan.id]}
-                  className={`w-full mb-6 ${
-                    plan.recommended
-                      ? "bg-amber-500 hover:bg-amber-600"
-                      : "bg-blue-600 hover:bg-blue-700"
-                  }`}
-                >
-                  <Zap className="w-4 h-4 mr-2" />
-                  {upgrading[plan.id] ? "Processing..." : "Upgrade Now"}
-                </Button>
+                <>
+                  <Button
+                    onClick={() => handleUpgrade(plan.id)}
+                    disabled={upgrading[plan.id]}
+                    className={`w-full mb-6 relative group overflow-hidden ${
+                      plan.recommended
+                        ? "bg-amber-500 hover:bg-amber-600"
+                        : "bg-blue-600 hover:bg-blue-700"
+                    }`}
+                  >
+                    <CreditCard className="w-4 h-4 mr-2" />
+                    {upgrading[plan.id] ? "Securely Linking..." : "Subscribe with Card"}
+                  </Button>
+                  <div className="text-center mb-6">
+                    <p className="text-xs text-gray-400 flex items-center justify-center gap-1">
+                      <Shield className="w-3 h-3" /> Secured by PayWay (Visa/Mastercard)
+                    </p>
+                  </div>
+                </>
               )}
 
               <div className="space-y-3 flex-1">
@@ -347,7 +372,7 @@ export default function PartnerSubscriptions() {
             </li>
             <li className="flex items-center gap-2">
               <Check className="w-4 h-4 text-green-600" />
-              <strong>ABA (Acleda Bank):</strong> Direct bank transfers & QR
+              <strong>ABA:</strong> Direct bank transfers & QR
               codes
             </li>
             <li className="flex items-center gap-2">

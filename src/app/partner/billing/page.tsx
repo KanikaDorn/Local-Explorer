@@ -14,6 +14,7 @@ import {
   Plus,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { PaymentHistoryTable } from "@/components/PaymentHistoryTable";
 
 interface Invoice {
   id: string;
@@ -243,6 +244,23 @@ export default function PartnerBilling() {
           </div>
         </Card>
       )}
+
+      {/* Transaction History & Refunds */}
+      <Card className="p-6 mb-8">
+        <h2 className="text-xl font-bold mb-6 flex items-center gap-2">
+           <DollarSign className="w-6 h-6" />
+           Transaction History
+        </h2>
+        {/* Pass transactions to the table (need to add to interface first but assuming JS flexibility for now or will fix) */}
+        <PaymentHistoryTable 
+            transactions={(billingData as any)?.transactions || []} 
+            onRefresh={() => {
+                // Reload data manually
+                setLoading(true); // crude reload
+                window.location.reload(); 
+            }} 
+        />
+      </Card>
 
       {/* Invoices */}
       <Card className="p-6">

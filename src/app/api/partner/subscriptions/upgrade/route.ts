@@ -39,12 +39,15 @@ export async function POST(req: NextRequest) {
     const supabase = createSupabaseServiceRole();
     
     
-    // Priority 1: Search by User ID (auth_uid) - This is the most reliable method
+    // Priority 1: Search by User ID (auth_uid) - fetch profile ID too
     let userId = null;
+    let profileId = null;
+    
     if (userDetails.id) {
-        const { data: profileById } = await supabase.from("profiles").select("auth_uid").eq("auth_uid", userDetails.id).single();
+        const { data: profileById } = await supabase.from("profiles").select("id, auth_uid").eq("auth_uid", userDetails.id).single();
         if (profileById) {
             userId = profileById.auth_uid;
+            profileId = profileById.id;
         }
     }
 
@@ -52,6 +55,7 @@ export async function POST(req: NextRequest) {
     if (!userId) {
         const { data: profileByEmail } = await supabase.from("profiles").select("id, auth_uid").eq("email", userDetails.email).single();
         userId = profileByEmail?.auth_uid || null;
+        profileId = profileByEmail?.id || null;
     }
 
     // specific fix for missing profiles: duplicate the logic to create if not found
@@ -62,14 +66,22 @@ export async function POST(req: NextRequest) {
             email: userDetails.email,
             full_name: `${userDetails.firstName} ${userDetails.lastName}`.trim(),
             display_name: userDetails.firstName,
-            is_partner: true // Assuming they are becoming a partner if they are upgrading
-        }).select("auth_uid").single();
+            is_partner: true
+        }).select("id, auth_uid").single();
 
         if (newProfile) {
             userId = newProfile.auth_uid;
+            profileId = newProfile.id;
         } else {
             console.error("Failed to auto-create profile:", createError);
         }
+    }
+    
+    // Fetch Partner ID
+    let partnerId = null;
+    if (profileId) {
+         const { data: partner } = await supabase.from("partners").select("id").eq("profile_id", profileId).single();
+         partnerId = partner?.id;
     }
 
     if (userId) {
@@ -81,25 +93,26 @@ export async function POST(req: NextRequest) {
            plan: planId,
            status: "pending",
            payment_amount: price,
-           metadata: { user_details: userDetails }
+           metadata: { user_details: userDetails, partner_id: partnerId }
        });
        
        if (insertError) {
            console.error("Failed to create transaction record:", insertError);
-           // We might strip return here or just log. Failing to record the transaction is bad practice though.
            return NextResponse.json(createErrorResponse("Failed to initialize transaction"), { status: 500 });
        }
     } else {
         console.warn("Could not link transaction to a user profile (email not found & creation failed):", userDetails.email);
-        // creating without user_id might fail if column is not null. 
-        // Assuming we need a user.
         return NextResponse.json(createErrorResponse("User profile not found. Please contact support."), { status: 404 });
     }
 
     // We use the return route which eventually might handle status updates, 
     // or we can use the callback route.
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
-    const callbackUrl = `${baseUrl}/api/payway/callback`; 
+    let callbackUrl = `${baseUrl}/api/payway/callback`; 
+    
+    if (partnerId) {
+        callbackUrl += `?partner_id=${partnerId}`;
+    } 
 
     let paymentResponse;
     try {

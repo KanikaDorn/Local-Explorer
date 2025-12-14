@@ -70,9 +70,11 @@ create table if not exists subscriptions (
   id uuid primary key default gen_random_uuid(),
   profile_id uuid references profiles(id) on delete cascade,
   tier text not null,
+  billing_cycle text default 'monthly', -- 'monthly' or 'yearly'
+  payment_token_id text, -- PayWay CoF token
   started_at timestamptz default now(),
   expires_at timestamptz,
-  status text default 'active',
+  status text default 'created', -- created, active, past_due, canceled
   metadata jsonb
 );
 

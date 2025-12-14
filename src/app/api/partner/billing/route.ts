@@ -33,6 +33,16 @@ export async function GET(req: NextRequest) {
       .order("created_at", { ascending: false })
       .limit(10);
 
+    // Get raw transactions for history/refunds
+    const { data: transactions, error: txErr } = await supabase
+      .from("transactions") // or "payments" if they are the same? Assuming distinct for now based on context
+      .select("*")
+      // .eq("user_id", userId) // transactions use auth_uid usually? or joined via partner?
+      // Check create call: user_id: userId
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false })
+      .limit(20);
+
     if (invErr) {
       console.error("Billing API Error:", invErr);
       return NextResponse.json(createErrorResponse(`Database Error: ${invErr.message} (${invErr.code})`), {
@@ -46,6 +56,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json(
       createSuccessResponse({
         invoices: invoices || [],
+        transactions: transactions || [],
         total_revenue,
       })
     );

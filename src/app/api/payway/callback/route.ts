@@ -27,63 +27,51 @@ export async function GET(req: NextRequest) {
     return NextResponse.redirect(`${req.nextUrl.origin}/partner/subscriptions?error=payment_failed`);
   }
 
-  // TODO: Verify Hash
-  // if (!verifyHash(tran_id!, amount!, status!, hash!)) {
-  //   return NextResponse.redirect(`${req.nextUrl.origin}/partner/subscriptions?error=invalid_signature`);
-  // }
+  // Verify Hash
+  if (!verifyHash(tran_id!, amount!, status!, hash!)) {
+    console.error("Hash verification failed for tran_id:", tran_id);
+    return NextResponse.redirect(`${req.nextUrl.origin}/partner/subscriptions?error=invalid_signature`);
+  }
 
   // Update Database
   try {
     const supabase = createSupabaseServiceRole();
     
-    // We need to find WHICH partner this transaction belongs to.
-    // IN a real app, 'tran_id' should be stored in a 'transactions' table linking to 'partner_id'.
-    // WITHOUT that, we don't know who paid!
-    // FIX: We rely on the user being logged in when they return.
-    // But cookies might be lost in some redirect flows (SameSite).
-    
-    // ALTERNATIVE: Use the 'firstname' or 'email' returned if PayWay sends it back.
-    // Or assume the browser session is still active.
-    
-    // Let's assume Browser Session is active for now.
-    // Get current user from Auth cookie
-    const supabaseAuth = createSupabaseServiceRole(); 
-    // Service role doesn't have auth context. We need `createClient` with cookies for that.
-    // But we are in an API route. 
-    
-    // TEMPORARY DEMO FIX:
-    // We will just redirect to a "Processing" page that does the update client-side? NO, insecure.
-    
-    // BETTER FIX:
-    // We need to pass the `partner_id` in the `return_url` when we create the transaction!
-    // src/lib/payway.ts -> createPayWayPayload -> return_url
-    
-    // Let's check if we can extract it from the URL if we passed it.
-    // We haven't implemented that yet. 
-    
-    // For this step, I will just Redirect to Success.
-    // The USER asked for verification. 
-    // I will add a URL param `?upgrade_to=${planId}` and let the client-side verify/update? 
-    // NO, that allows anyone to upgrade for free.
-    
-    // CORRECT FIX:
-    // I need to update the `return_url` generation in `subscriptions/page.tsx` to include `?partner_id=...`
-    // BUT the callback/route.ts handles the redirect from PayWay. 
-    // PayWay redirects to whatever we sent.
-    
-    // So if I assume the URL contains `partner_id`, I can extract it here.
+    // Extract partner_id from query params (we appended it in upgrading route)
     const partnerId = searchParams.get("partner_id");
     
     if (partnerId) {
-      await supabase
+      console.log(`Updating subscription for Partner ID: ${partnerId} to Plan: ${planId}`);
+      
+      const { error: updateError } = await supabase
         .from("partners")
         .update({
           subscription_plan_id: planId,
-          subscription_status: 'active',
+          subscription_status: 'active', // TODO: sync this with enum if exists
           subscription_start_date: new Date().toISOString(),
-          // subscription_end_date: ... (1 month later)
+          // simple logic: 1 month validity
+          subscription_end_date: new Date(new Date().setMonth(new Date().getMonth() + 1)).toISOString()
         })
         .eq("id", partnerId);
+        
+       if (updateError) {
+           console.error("Failed to update partner subscription:", updateError);
+           // Still redirect to success because payment WAS successful, but internal update failed.
+           // Maybe showing a different warning would be better?
+       }
+       
+       // Also update the transaction status
+       // We don't have transaction ID in 'transactions' table easily accessible unless we query by tran_id
+       if (tran_id) {
+           await supabase.from("transactions").update({
+               status: 'completed',
+               payment_status: 'APPROVED',
+               raw_response: { ...Object.fromEntries(searchParams.entries()) }
+           }).eq("tran_id", tran_id);
+       }
+
+    } else {
+        console.warn("Partner ID missing in callback params. Cannot update subscription automatically.");
     }
     
     return NextResponse.redirect(`${req.nextUrl.origin}/partner/subscriptions?success=true&plan=${planId}`);

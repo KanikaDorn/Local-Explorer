@@ -63,16 +63,34 @@ export async function POST(req: NextRequest) {
     const supabase = createSupabaseServiceRole();
     const body = (await req.json().catch(() => ({}))) || {};
 
-    const { data: profile, error: profileErr } = await supabase
+    let { data: profile, error: profileErr } = await supabase
       .from("profiles")
       .select("*")
       .eq("auth_uid", userId)
       .single();
 
     if (profileErr || !profile) {
-      return NextResponse.json(createErrorResponse("Profile not found"), {
-        status: 404,
-      });
+        // Attempt to auto-create profile from Auth User if missing
+        const { data: { user: authUser }, error: authErr } = await supabase.auth.admin.getUserById(userId);
+        
+        if (authErr || !authUser) {
+             return NextResponse.json(createErrorResponse("User not found in Auth"), { status: 404 });
+        }
+
+        const { data: newProfile, error: createErr } = await supabase.from("profiles").upsert({
+            auth_uid: userId,
+            email: authUser.email,
+            full_name: authUser.user_metadata?.full_name || "User",
+            display_name: (authUser.user_metadata?.full_name || "User").split(" ")[0],
+            is_partner: true, // Auto-mark since they are calling partner/profile
+            updated_at: new Date().toISOString()
+        }, { onConflict: "auth_uid" }).select("*").single();
+
+        if (createErr) {
+             console.error("Failed to auto-create profile:", createErr);
+             return NextResponse.json(createErrorResponse("Failed to create profile"), { status: 500 });
+        }
+        profile = newProfile;
     }
 
     // Create partner record if missing

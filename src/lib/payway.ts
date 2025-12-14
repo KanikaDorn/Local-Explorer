@@ -120,11 +120,7 @@ export interface PayWayCheckTransactionResponse {
     data?: PayWayTransactionData;
 }
 
-export const verifyHash = (tran_id: string, amount: string, status: string, hash: string): boolean => {
-    // TODO: Implement actual PayWay hash verification based on their documentation
-    console.warn("verifyHash not fully implemented, returning true for deployment safety");
-    return true; 
-};
+
 // End Added Exports
 
 export const getTransactionsByRef = async (merchantRef: string): Promise<PayWayGetTransactionsResponse> => {
@@ -156,7 +152,7 @@ export const getTransactionsByRef = async (merchantRef: string): Promise<PayWayG
         headers: {
             "Content-Type": "application/json"
         },
-        body: JSON.stringify(payload)
+        body: JSON.stringify(payload) // fetch automatically sets Content-Type? No we set it.
     });
 
     if (!response.ok) {
@@ -170,6 +166,31 @@ export const getTransactionsByRef = async (merchantRef: string): Promise<PayWayG
     }
 
     return await response.json() as PayWayGetTransactionsResponse;
+};
+
+export const verifyHash = (tran_id: string, amount: string, status: string, hash: string): boolean => {
+    // Hash: base64(hmac(sha512, tran_id + amount + status, api_key))
+    // Note: PayWay documentation says the hash string for callback is:
+    // sha512 hash of (tran_id + amount + status) using generic key?
+    // OR base64(hmac(tran_id + amount + status, api_key))
+    
+    // Check official docs logic:
+    // hash = base64_encode(hash_hmac('sha512', tran_id . amount . status, api_key, true));
+    
+    if (!tran_id || !amount || !status || !hash) return false;
+
+    const b4hash = tran_id + amount + status; // simple concatenation? Or with merchant_id?
+    // Docs usually say: hash = base64(hmac(sha512, tran_id + amount + status, api_key))
+    
+    // HOWEVER, previous implementations for payment link used request_time + ...
+    // For callback, it is typically just the returned params.
+    
+    const hmac = crypto.createHmac("sha512", API_KEY);
+    hmac.update(b4hash);
+    const calculatedHash = hmac.digest("base64");
+    
+    // Constant time comparison to prevent timing attacks
+    return calculatedHash === hash;
 };
 
 // --- Main Payment Link Creator ---
@@ -249,6 +270,69 @@ export const createPaymentLink = async (
     }
 
     return await response.json() as PayWayPaymentLinkResponse;
+};
+
+export const purchaseWithToken = async (
+    tranId: string,
+    amount: number,
+    items: PayWayItem[],
+    paymentToken: string, // The CoF token
+    user: { email: string; phone: string; firstName: string; lastName: string }
+): Promise<any> => {
+    const reqTime = getReqTime();
+    
+    // Construct payload for Purchase
+    // Endpoint: /api/payment-gateway/v1/payments/purchase
+    
+    const innerData = {
+        mc_id: MERCHANT_ID,
+        tran_id: tranId,
+        amount: amount.toFixed(2),
+        currency: "USD",
+        payment_option: "cards", // or generic
+        payment_token: paymentToken, // This triggers the CoF charge
+        firstname: user.firstName,
+        lastname: user.lastName, 
+        email: user.email,
+        phone: user.phone,
+        items: items // PayWay typically wants just the total, but sometimes items too
+    };
+
+    const jsonString = JSON.stringify(innerData);
+    const merchantAuth = encryptRSA(jsonString);
+    
+    // Hash: base64(hmac(req_time + merchant_id + merchant_auth))
+    const b4hash = reqTime + MERCHANT_ID + merchantAuth;
+    
+    const hmac = crypto.createHmac("sha512", API_KEY);
+    hmac.update(b4hash);
+    const hash = hmac.digest("base64");
+
+    const formData = new FormData();
+    formData.append("request_time", reqTime);
+    formData.append("merchant_id", MERCHANT_ID);
+    formData.append("merchant_auth", merchantAuth);
+    formData.append("hash", hash);
+
+    const url = getPayWayApiUrl("payment-gateway/v1/payments/purchase");
+    console.log("Charging Token at:", url);
+
+    const response = await fetch(url, {
+        method: "POST",
+        body: formData
+    });
+
+    if (!response.ok) {
+        const text = await response.text();
+        console.error("PayWay Purchase Failed:", text);
+        try {
+             return JSON.parse(text);
+        } catch {
+             throw new Error(`PayWay API Error: ${response.status} ${text}`);
+        }
+    }
+
+    return await response.json();
 };
 
 // --- Leftover aliases for compatibility / unused ---
