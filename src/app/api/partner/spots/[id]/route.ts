@@ -4,8 +4,9 @@ import { createErrorResponse, createSuccessResponse } from "@/lib/utils";
 
 export async function PUT(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   try {
     const userId = req.headers.get("user-id");
     if (!userId)
@@ -14,7 +15,7 @@ export async function PUT(
       });
 
     const body = await req.json();
-    const spotId = params.id;
+    const spotId = id;
     const supabase = createSupabaseServiceRole();
 
     // find partner id
@@ -23,6 +24,9 @@ export async function PUT(
       .select("id")
       .eq("auth_uid", userId)
       .single();
+    
+    if (!profile) return NextResponse.json(createErrorResponse("Profile not found"), { status: 404 });
+
     const { data: partner } = await supabase
       .from("partners")
       .select("id")
@@ -97,8 +101,9 @@ export async function PUT(
 
 export async function DELETE(
   _req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   try {
     const userId = _req.headers.get("user-id");
     if (!userId)
@@ -106,7 +111,7 @@ export async function DELETE(
         status: 401,
       });
 
-    const spotId = params.id;
+    const spotId = id;
     const supabase = createSupabaseServiceRole();
 
     const { data: profile } = await supabase
@@ -114,6 +119,9 @@ export async function DELETE(
       .select("id")
       .eq("auth_uid", userId)
       .single();
+
+    if (!profile) return NextResponse.json(createErrorResponse("Profile not found"), { status: 404 });
+
     const { data: partner } = await supabase
       .from("partners")
       .select("id")

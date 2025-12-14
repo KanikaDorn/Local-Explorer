@@ -1,0 +1,141 @@
+.next/dev/types/validator.ts(351,31): error TS2344: Type 'typeof import("D:/1_Random/localexplore/src/app/api/admin/spots/[id]/moderate/route")' does not satisfy the constraint 'RouteHandlerConfig<"/api/admin/spots/[id]/moderate">'.
+  Types of property 'POST' are incompatible.
+    Type '(req: Request, { params }: { params: { id: string; }; }) => Promise<NextResponse<ApiResponse<any>>>' is not assignable to type '(request: NextRequest, context: { params: Promise<{ id: string; }>; }) => void | Response | Promise<void | Response>'.
+      Types of parameters '__1' and 'context' are incompatible.
+        Type '{ params: Promise<{ id: string; }>; }' is not assignable to type '{ params: { id: string; }; }'.
+          Types of property 'params' are incompatible.
+            Property 'id' is missing in type 'Promise<{ id: string; }>' but required in type '{ id: string; }'.
+.next/dev/types/validator.ts(378,31): error TS2344: Type 'typeof import("D:/1_Random/localexplore/src/app/api/admin/users/[id]/route")' does not satisfy the constraint 'RouteHandlerConfig<"/api/admin/users/[id]">'.
+  Types of property 'PUT' are incompatible.
+    Type '(req: Request, { params }: { params: { id: string; }; }) => Promise<NextResponse<ApiResponse<any>>>' is not assignable to type '(request: NextRequest, context: { params: Promise<{ id: string; }>; }) => void | Response | Promise<void | Response>'.
+      Types of parameters '__1' and 'context' are incompatible.
+        Type '{ params: Promise<{ id: string; }>; }' is not assignable to type '{ params: { id: string; }; }'.
+          Types of property 'params' are incompatible.
+            Property 'id' is missing in type 'Promise<{ id: string; }>' but required in type '{ id: string; }'.
+.next/dev/types/validator.ts(450,31): error TS2344: Type 'typeof import("D:/1_Random/localexplore/src/app/api/itineraries/[id]/route")' does not satisfy the constraint 'RouteHandlerConfig<"/api/itineraries/[id]">'.
+  Types of property 'GET' are incompatible.
+    Type '(_req: Request, { params }: { params: { id: string; }; }) => Promise<NextResponse<{ error: string; }> | NextResponse<{ itinerary: any; }>>' is not assignable to type '(request: NextRequest, context: { params: Promise<{ id: string; }>; }) => void | Response | Promise<void | Response>'.
+      Types of parameters '__1' and 'context' are incompatible.
+        Type '{ params: Promise<{ id: string; }>; }' is not assignable to type '{ params: { id: string; }; }'.
+          Types of property 'params' are incompatible.
+            Property 'id' is missing in type 'Promise<{ id: string; }>' but required in type '{ id: string; }'.
+.next/dev/types/validator.ts(459,31): error TS2344: Type 'typeof import("D:/1_Random/localexplore/src/app/api/itineraries/[id]/share/route")' does not satisfy the constraint 'RouteHandlerConfig<"/api/itineraries/[id]/share">'.
+  Types of property 'POST' are incompatible.
+    Type '(req: Request, { params }: { params: { id: string; }; }) => Promise<NextResponse<{ share: { token: any; url: string; expires_at: any; }; }> | NextResponse<{ error: any; }>>' is not assignable to type '(request: NextRequest, context: { params: Promise<{ id: string; }>; }) => void | Response | Promise<void | Response>'.
+      Types of parameters '__1' and 'context' are incompatible.
+        Type '{ params: Promise<{ id: string; }>; }' is not assignable to type '{ params: { id: string; }; }'.
+          Types of property 'params' are incompatible.
+            Property 'id' is missing in type 'Promise<{ id: string; }>' but required in type '{ id: string; }'.
+.next/dev/types/validator.ts(522,31): error TS2344: Type 'typeof import("D:/1_Random/localexplore/src/app/api/partner/spots/[id]/route")' does not satisfy the constraint 'RouteHandlerConfig<"/api/partner/spots/[id]">'.
+  Types of property 'PUT' are incompatible.
+    Type '(req: Request, { params }: { params: { id: string; }; }) => Promise<NextResponse<ApiResponse<any>>>' is not assignable to type '(request: NextRequest, context: { params: Promise<{ id: string; }>; }) => void | Response | Promise<void | Response>'.
+      Types of parameters '__1' and 'context' are incompatible.
+        Type '{ params: Promise<{ id: string; }>; }' is not assignable to type '{ params: { id: string; }; }'.
+          Types of property 'params' are incompatible.
+            Property 'id' is missing in type 'Promise<{ id: string; }>' but required in type '{ id: string; }'.
+.next/dev/types/validator.ts(603,31): error TS2344: Type 'typeof import("D:/1_Random/localexplore/src/app/api/public/itineraries/[token]/route")' does not satisfy the constraint 'RouteHandlerConfig<"/api/public/itineraries/[token]">'.
+  Types of property 'GET' are incompatible.
+    Type '(_req: Request, { params }: { params: { token: string; }; }) => Promise<NextResponse<{ itinerary: { id: any; title: any; description: any; itinerary: any; created_at: any; }; }> | NextResponse<{ ...; }>>' is not assignable to type '(request: NextRequest, context: { params: Promise<{ token: string; }>; }) => void | Response | Promise<void | Response>'.
+      Types of parameters '__1' and 'context' are incompatible.
+        Type '{ params: Promise<{ token: string; }>; }' is not assignable to type '{ params: { token: string; }; }'.
+          Types of property 'params' are incompatible.
+            Property 'token' is missing in type 'Promise<{ token: string; }>' but required in type '{ token: string; }'.
+.next/dev/types/validator.ts(612,31): error TS2344: Type 'typeof import("D:/1_Random/localexplore/src/app/api/spots/[id]/route")' does not satisfy the constraint 'RouteHandlerConfig<"/api/spots/[id]">'.
+  Types of property 'GET' are incompatible.
+    Type '(_req: Request, { params }: { params: { id: string; }; }) => Promise<NextResponse<{ error: string; }> | NextResponse<{ spot: any; }>>' is not assignable to type '(request: NextRequest, context: { params: Promise<{ id: string; }>; }) => void | Response | Promise<void | Response>'.
+      Types of parameters '__1' and 'context' are incompatible.
+        Type '{ params: Promise<{ id: string; }>; }' is not assignable to type '{ params: { id: string; }; }'.
+          Types of property 'params' are incompatible.
+            Property 'id' is missing in type 'Promise<{ id: string; }>' but required in type '{ id: string; }'.
+.next/types/validator.ts(351,31): error TS2344: Type 'typeof import("D:/1_Random/localexplore/src/app/api/admin/spots/[id]/moderate/route")' does not satisfy the constraint 'RouteHandlerConfig<"/api/admin/spots/[id]/moderate">'.
+  Types of property 'POST' are incompatible.
+    Type '(req: Request, { params }: { params: { id: string; }; }) => Promise<NextResponse<ApiResponse<any>>>' is not assignable to type '(request: NextRequest, context: { params: Promise<{ id: string; }>; }) => void | Response | Promise<void | Response>'.
+      Types of parameters '__1' and 'context' are incompatible.
+        Type '{ params: Promise<{ id: string; }>; }' is not assignable to type '{ params: { id: string; }; }'.
+          Types of property 'params' are incompatible.
+            Property 'id' is missing in type 'Promise<{ id: string; }>' but required in type '{ id: string; }'.
+.next/types/validator.ts(378,31): error TS2344: Type 'typeof import("D:/1_Random/localexplore/src/app/api/admin/users/[id]/route")' does not satisfy the constraint 'RouteHandlerConfig<"/api/admin/users/[id]">'.
+  Types of property 'PUT' are incompatible.
+    Type '(req: Request, { params }: { params: { id: string; }; }) => Promise<NextResponse<ApiResponse<any>>>' is not assignable to type '(request: NextRequest, context: { params: Promise<{ id: string; }>; }) => void | Response | Promise<void | Response>'.
+      Types of parameters '__1' and 'context' are incompatible.
+        Type '{ params: Promise<{ id: string; }>; }' is not assignable to type '{ params: { id: string; }; }'.
+          Types of property 'params' are incompatible.
+            Property 'id' is missing in type 'Promise<{ id: string; }>' but required in type '{ id: string; }'.
+.next/types/validator.ts(450,31): error TS2344: Type 'typeof import("D:/1_Random/localexplore/src/app/api/itineraries/[id]/route")' does not satisfy the constraint 'RouteHandlerConfig<"/api/itineraries/[id]">'.
+  Types of property 'GET' are incompatible.
+    Type '(_req: Request, { params }: { params: { id: string; }; }) => Promise<NextResponse<{ error: string; }> | NextResponse<{ itinerary: any; }>>' is not assignable to type '(request: NextRequest, context: { params: Promise<{ id: string; }>; }) => void | Response | Promise<void | Response>'.
+      Types of parameters '__1' and 'context' are incompatible.
+        Type '{ params: Promise<{ id: string; }>; }' is not assignable to type '{ params: { id: string; }; }'.
+          Types of property 'params' are incompatible.
+            Property 'id' is missing in type 'Promise<{ id: string; }>' but required in type '{ id: string; }'.
+.next/types/validator.ts(459,31): error TS2344: Type 'typeof import("D:/1_Random/localexplore/src/app/api/itineraries/[id]/share/route")' does not satisfy the constraint 'RouteHandlerConfig<"/api/itineraries/[id]/share">'.
+  Types of property 'POST' are incompatible.
+    Type '(req: Request, { params }: { params: { id: string; }; }) => Promise<NextResponse<{ share: { token: any; url: string; expires_at: any; }; }> | NextResponse<{ error: any; }>>' is not assignable to type '(request: NextRequest, context: { params: Promise<{ id: string; }>; }) => void | Response | Promise<void | Response>'.
+      Types of parameters '__1' and 'context' are incompatible.
+        Type '{ params: Promise<{ id: string; }>; }' is not assignable to type '{ params: { id: string; }; }'.
+          Types of property 'params' are incompatible.
+            Property 'id' is missing in type 'Promise<{ id: string; }>' but required in type '{ id: string; }'.
+.next/types/validator.ts(522,31): error TS2344: Type 'typeof import("D:/1_Random/localexplore/src/app/api/partner/spots/[id]/route")' does not satisfy the constraint 'RouteHandlerConfig<"/api/partner/spots/[id]">'.
+  Types of property 'PUT' are incompatible.
+    Type '(req: Request, { params }: { params: { id: string; }; }) => Promise<NextResponse<ApiResponse<any>>>' is not assignable to type '(request: NextRequest, context: { params: Promise<{ id: string; }>; }) => void | Response | Promise<void | Response>'.
+      Types of parameters '__1' and 'context' are incompatible.
+        Type '{ params: Promise<{ id: string; }>; }' is not assignable to type '{ params: { id: string; }; }'.
+          Types of property 'params' are incompatible.
+            Property 'id' is missing in type 'Promise<{ id: string; }>' but required in type '{ id: string; }'.
+.next/types/validator.ts(603,31): error TS2344: Type 'typeof import("D:/1_Random/localexplore/src/app/api/public/itineraries/[token]/route")' does not satisfy the constraint 'RouteHandlerConfig<"/api/public/itineraries/[token]">'.
+  Types of property 'GET' are incompatible.
+    Type '(_req: Request, { params }: { params: { token: string; }; }) => Promise<NextResponse<{ itinerary: { id: any; title: any; description: any; itinerary: any; created_at: any; }; }> | NextResponse<{ ...; }>>' is not assignable to type '(request: NextRequest, context: { params: Promise<{ token: string; }>; }) => void | Response | Promise<void | Response>'.
+      Types of parameters '__1' and 'context' are incompatible.
+        Type '{ params: Promise<{ token: string; }>; }' is not assignable to type '{ params: { token: string; }; }'.
+          Types of property 'params' are incompatible.
+            Property 'token' is missing in type 'Promise<{ token: string; }>' but required in type '{ token: string; }'.
+.next/types/validator.ts(612,31): error TS2344: Type 'typeof import("D:/1_Random/localexplore/src/app/api/spots/[id]/route")' does not satisfy the constraint 'RouteHandlerConfig<"/api/spots/[id]">'.
+  Types of property 'GET' are incompatible.
+    Type '(_req: Request, { params }: { params: { id: string; }; }) => Promise<NextResponse<{ error: string; }> | NextResponse<{ spot: any; }>>' is not assignable to type '(request: NextRequest, context: { params: Promise<{ id: string; }>; }) => void | Response | Promise<void | Response>'.
+      Types of parameters '__1' and 'context' are incompatible.
+        Type '{ params: Promise<{ id: string; }>; }' is not assignable to type '{ params: { id: string; }; }'.
+          Types of property 'params' are incompatible.
+            Property 'id' is missing in type 'Promise<{ id: string; }>' but required in type '{ id: string; }'.
+src/__tests__/lib/apiClient.test.ts(7,1): error TS2593: Cannot find name 'describe'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+src/__tests__/lib/apiClient.test.ts(8,3): error TS2304: Cannot find name 'beforeEach'.
+src/__tests__/lib/apiClient.test.ts(10,5): error TS2304: Cannot find name 'jest'.
+src/__tests__/lib/apiClient.test.ts(13,3): error TS2593: Cannot find name 'test'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+src/__tests__/lib/apiClient.test.ts(14,20): error TS2304: Cannot find name 'jest'.
+src/__tests__/lib/apiClient.test.ts(19,10): error TS2503: Cannot find namespace 'jest'.
+src/__tests__/lib/apiClient.test.ts(22,5): error TS2304: Cannot find name 'expect'.
+src/__tests__/lib/apiClient.test.ts(23,5): error TS2304: Cannot find name 'expect'.
+src/__tests__/lib/apiClient.test.ts(26,3): error TS2593: Cannot find name 'test'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+src/__tests__/lib/apiClient.test.ts(27,20): error TS2304: Cannot find name 'jest'.
+src/__tests__/lib/apiClient.test.ts(32,10): error TS2503: Cannot find namespace 'jest'.
+src/__tests__/lib/apiClient.test.ts(40,5): error TS2304: Cannot find name 'expect'.
+src/__tests__/lib/apiClient.test.ts(41,7): error TS2304: Cannot find name 'expect'.
+src/__tests__/lib/apiClient.test.ts(42,7): error TS2304: Cannot find name 'expect'.
+src/__tests__/lib/apiClient.test.ts(48,3): error TS2593: Cannot find name 'test'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+src/__tests__/lib/apiClient.test.ts(49,20): error TS2304: Cannot find name 'jest'.
+src/__tests__/lib/apiClient.test.ts(54,10): error TS2503: Cannot find namespace 'jest'.
+src/__tests__/lib/apiClient.test.ts(57,5): error TS2304: Cannot find name 'expect'.
+src/__tests__/lib/apiClient.test.ts(58,5): error TS2304: Cannot find name 'expect'.
+src/__tests__/lib/types.test.ts(7,1): error TS2593: Cannot find name 'describe'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+src/__tests__/lib/types.test.ts(8,3): error TS2593: Cannot find name 'test'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+src/__tests__/lib/types.test.ts(9,5): error TS2304: Cannot find name 'expect'.
+src/__tests__/lib/types.test.ts(10,5): error TS2304: Cannot find name 'expect'.
+src/__tests__/lib/types.test.ts(11,5): error TS2304: Cannot find name 'expect'.
+src/__tests__/lib/types.test.ts(14,3): error TS2593: Cannot find name 'test'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+src/__tests__/lib/types.test.ts(28,5): error TS2304: Cannot find name 'expect'.
+src/__tests__/lib/types.test.ts(29,5): error TS2304: Cannot find name 'expect'.
+src/__tests__/lib/types.test.ts(30,5): error TS2304: Cannot find name 'expect'.
+src/__tests__/lib/types.test.ts(33,3): error TS2593: Cannot find name 'test'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+src/__tests__/lib/types.test.ts(39,7): error TS2353: Object literal may only specify known properties, and 'latitude' does not exist in type 'Spot'.
+src/__tests__/lib/types.test.ts(46,5): error TS2304: Cannot find name 'expect'.
+src/__tests__/lib/types.test.ts(47,5): error TS2304: Cannot find name 'expect'.
+src/__tests__/lib/types.test.ts(50,3): error TS2593: Cannot find name 'test'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+src/__tests__/lib/types.test.ts(59,7): error TS2353: Object literal may only specify known properties, and 'updated_at' does not exist in type 'Payment'.
+src/__tests__/lib/types.test.ts(62,5): error TS2304: Cannot find name 'expect'.
+src/app/api/partner/spots/[id]/route.ts(29,25): error TS18047: 'profile' is possibly 'null'.
+src/app/api/partner/spots/[id]/route.ts(120,25): error TS18047: 'profile' is possibly 'null'.
+src/app/api/payway/callback/route.ts(3,10): error TS2305: Module '"@/lib/payway"' has no exported member 'verifyHash'.
+src/app/api/payway/return/route.ts(4,10): error TS2724: '"@/lib/payway"' has no exported member named 'PayWayCheckTransactionResponse'. Did you mean 'PayWayGetTransactionsResponse'?
+src/app/api/payway/return/route.ts(4,42): error TS2724: '"@/lib/payway"' has no exported member named 'PayWayTransactionData'. Did you mean 'PayWayTransactionDetail'?
+src/app/partner/locations/[id]/edit/page.tsx(10,10): error TS2305: Module '"@/components/ui/toast"' has no exported member 'useToast'.
+src/app/partner/locations/[id]/page.tsx(20,8): error TS2613: Module '"D:/1_Random/localexplore/src/components/Map"' has no default export. Did you mean to use 'import { Map } from "D:/1_Random/localexplore/src/components/Map"' instead?
+src/app/partner/locations/[id]/page.tsx(21,10): error TS2305: Module '"@/components/ui/toast"' has no exported member 'useToast'.

@@ -27,16 +27,18 @@ export function SignUpForm() {
     setError("");
 
     try {
-      const result: any = await signUp(email, password);
+      const result: any = await signUp(email, password, {
+        full_name: fullName,
+      });
 
-      // If signUp returned a user object, proactively create a profile record
+      // If signUp returned a user object, proactively create a profile record (Best Effort)
       const user = result?.user || result?.data?.user || null;
       if (user) {
         try {
           await createUserProfile(user.id, email, fullName || "");
         } catch (profileErr) {
-          // non-fatal: log but continue to redirect
-          console.error("Error creating profile after signup:", profileErr);
+          // non-fatal
+          console.warn("Error creating profile after signup (likely pending verification):", profileErr);
         }
       }
 
@@ -110,6 +112,22 @@ export function SignUpForm() {
             Already have an account?{" "}
             <a href="/login" className="text-blue-600 hover:underline">
               Sign In
+            </a>
+          </p>
+
+          <div className="relative my-4">
+             <div className="absolute inset-0 flex items-center">
+               <span className="w-full border-t" />
+             </div>
+             <div className="relative flex justify-center text-xs uppercase">
+               <span className="bg-white px-2 text-gray-500">Or</span>
+             </div>
+          </div>
+
+          <p className="text-sm text-center text-gray-600">
+            Have a business?{" "}
+            <a href="/partner/signup" className="text-orange-600 hover:underline font-medium">
+              Join as Partner
             </a>
           </p>
         </form>

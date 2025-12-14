@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Upload, AlertCircle, Check } from "lucide-react";
-import { useToast } from "@/components/ui/toast";
+import { useToast } from "@/hooks/use-toast";
 
 interface PartnerProfile {
   id: string;
@@ -22,9 +22,20 @@ interface PartnerProfile {
   business_hours?: Record<string, string>;
 }
 
+const DAYS = [
+  { key: "mon", label: "Monday" },
+  { key: "tue", label: "Tuesday" },
+  { key: "wed", label: "Wednesday" },
+  { key: "thu", label: "Thursday" },
+  { key: "fri", label: "Friday" },
+  { key: "sat", label: "Saturday" },
+  { key: "sun", label: "Sunday" },
+];
+
 export default function PartnerProfile() {
   const router = useRouter();
-  const { addToast } = useToast();
+  const { toast } = useToast();
+  const addToast = ({ message }: { message: string; duration?: number }) => toast({ title: message });
   const [profile, setProfile] = useState<PartnerProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -319,6 +330,33 @@ export default function PartnerProfile() {
                 placeholder="Your VAT number"
               />
             </div>
+          </div>
+        </Card>
+
+        {/* Business Hours */}
+        <Card className="p-6">
+          <h2 className="text-xl font-bold mb-4">Business Hours</h2>
+          <div className="space-y-4">
+            {DAYS.map((day) => (
+              <div key={day.key} className="grid grid-cols-3 items-center gap-4">
+                <div className="font-medium text-gray-700">{day.label}</div>
+                <div className="col-span-2">
+                  <Input
+                    placeholder="e.g. 09:00 - 17:00 or Closed"
+                    value={formData.business_hours?.[day.key] || ""}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        business_hours: {
+                          ...prev.business_hours,
+                          [day.key]: e.target.value,
+                        },
+                      }))
+                    }
+                  />
+                </div>
+              </div>
+            ))}
           </div>
         </Card>
 

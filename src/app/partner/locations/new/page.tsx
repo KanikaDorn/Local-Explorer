@@ -7,14 +7,25 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { useToast } from "@/components/ui/toast";
+import { useToast } from "@/hooks/use-toast";
+import { ToastAction } from "@/components/ui/toast";
 import MapPicker from "@/components/MapPicker";
 import supabaseBrowser from "@/lib/supabaseClient";
 import { Save, ArrowLeft, Image, MapPin } from "lucide-react";
 
 export default function NewLocationPage() {
   const router = useRouter();
-  const { addToast } = useToast();
+  const { toast } = useToast();
+  const addToast = (props: any) => {
+    toast({
+      title: props.message,
+      action: props.actionLabel ? (
+        <ToastAction altText={props.actionLabel} onClick={props.onAction}>
+          {props.actionLabel}
+        </ToastAction>
+      ) : undefined,
+    });
+  };
   const [title, setTitle] = useState("");
   const [category, setCategory] = useState("");
   const [city, setCity] = useState("");
@@ -27,6 +38,7 @@ export default function NewLocationPage() {
   const [tagsText, setTagsText] = useState("");
   const [address, setAddress] = useState("");
   const [priceLevel, setPriceLevel] = useState<number | null>(null);
+  const [specialOfferings, setSpecialOfferings] = useState("");
   const [published, setPublished] = useState(false);
   const [coverFile, setCoverFile] = useState<File | null>(null);
   const [coverUrl, setCoverUrl] = useState<string | null>(null);
@@ -113,6 +125,7 @@ export default function NewLocationPage() {
         tags,
         address,
         price_level: priceLevel,
+        special_offerings: specialOfferings,
         published,
         cover_url: uploadedUrl,
         cover_path: uploadedPath || null,
@@ -253,6 +266,21 @@ export default function NewLocationPage() {
                 />
               </div>
             </div>
+          </Card>
+
+          {/* Special Offerings */}
+          <Card className="p-6">
+            <h2 className="text-lg font-bold mb-4">Special Offerings / Events</h2>
+            <p className="text-sm text-gray-600 mb-2">
+              Highlight any ongoing promotions, happy hours, or special events.
+            </p>
+            <textarea
+              value={specialOfferings}
+              onChange={(e) => setSpecialOfferings(e.target.value)}
+              placeholder="e.g., Happy Hour every Friday 5-7PM, Live Music on Saturdays..."
+              rows={3}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
           </Card>
 
           {/* Cover Image */}

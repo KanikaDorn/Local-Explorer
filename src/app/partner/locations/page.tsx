@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import apiFetch from "@/lib/apiClient";
 import { Card } from "@/components/ui/card";
+import { ToastAction } from "@/components/ui/toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -16,7 +17,7 @@ import {
   Trash2,
   Edit,
 } from "lucide-react";
-import { useToast } from "@/components/ui/toast";
+import { useToast } from "@/hooks/use-toast";
 
 interface Location {
   id: string;
@@ -40,7 +41,18 @@ export default function LocationsPage() {
     "all" | "published" | "draft"
   >("all");
   const [deleting, setDeleting] = useState<Record<string, boolean>>({});
-  const { addToast } = useToast();
+  const { toast } = useToast();
+  const addToast = (props: { message: string; duration?: number; actionLabel?: string; onAction?: () => void }) => {
+    toast({
+      title: props.message,
+      action:
+        props.actionLabel && props.onAction ? (
+          <ToastAction altText={props.actionLabel} onClick={props.onAction}>
+            {props.actionLabel}
+          </ToastAction>
+        ) : undefined,
+    });
+  };
 
   useEffect(() => {
     const loadLocations = async () => {

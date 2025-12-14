@@ -3,10 +3,11 @@ import { createSupabaseServiceRole } from "@/lib/supabaseClient";
 
 export async function GET(
   _req: Request,
-  { params }: { params: { token: string } }
+  { params }: { params: Promise<{ token: string }> }
 ) {
+  const { token } = await params;
   try {
-    const token = params.token;
+    // token is already destructured from await params above
     const supabase = createSupabaseServiceRole();
 
     // Find share record and validate expiry

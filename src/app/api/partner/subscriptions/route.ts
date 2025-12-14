@@ -5,58 +5,80 @@ import { createErrorResponse, createSuccessResponse } from "@/lib/utils";
 export async function GET(req: NextRequest) {
   try {
     const userId = req.headers.get("user-id");
-    if (!userId) {
-      return NextResponse.json(createErrorResponse("Unauthorized"), {
-        status: 401,
-      });
-    }
-
-    const supabase = createSupabaseServiceRole();
-    const { data: profile, error: profileErr } = await supabase
-      .from("profiles")
-      .select("id")
-      .eq("auth_uid", userId)
-      .single();
-
-    if (profileErr || !profile) {
-      return NextResponse.json(createErrorResponse("Profile not found"), {
-        status: 404,
-      });
-    }
-
-    // Get partner subscriptions
-    const { data: partner } = await supabase
-      .from("partners")
-      .select("subscription_tier")
-      .eq("profile_id", profile.id)
-      .single();
-
-    const subscriptions = [
+    
+    // Default Plans
+    const plans = [
       {
-        tier: "starter",
+        id: "starter",
+        name: "Starter",
         price: 29,
-        billing_cycle: "month",
-        status: "available",
-        current_plan: partner?.subscription_tier === "starter",
+        currency: "USD",
+        period: "month",
+        description: "Perfect for new businesses",
+        features: ["Up to 5 locations", "Basic analytics", "Email support"],
       },
       {
-        tier: "growth",
+        id: "growth",
+        name: "Growth",
         price: 79,
-        billing_cycle: "month",
-        status: "available",
-        current_plan: partner?.subscription_tier === "growth",
+        currency: "USD",
+        period: "month",
+        description: "For growing businesses",
+        features: ["Up to 20 locations", "Advanced analytics", "Priority support"],
+        recommended: true,
       },
       {
-        tier: "professional",
+        id: "professional",
+        name: "Professional",
         price: 199,
-        billing_cycle: "month",
-        status: "available",
-        current_plan: partner?.subscription_tier === "professional",
+        currency: "USD",
+        period: "month",
+        description: "For established enterprises",
+        features: ["Unlimited locations", "Full analytics", "Dedicated support"],
       },
     ];
 
-    return NextResponse.json(createSuccessResponse(subscriptions));
+    let current = null;
+
+    if (userId) {
+        const supabase = createSupabaseServiceRole();
+        
+        // 1. Get Profile
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("id")
+          .eq("auth_uid", userId)
+          .single();
+
+        if (profile) {
+            // 2. Get Partner Subscription
+            const { data: partner } = await supabase
+              .from("partners")
+              .select("subscription_tier") // Add expiration/status columns if they exist
+              .eq("profile_id", profile.id)
+              .single();
+            
+            if (partner) {
+                // Map DB tier to plan structure
+                current = {
+                    planId: partner.subscription_tier || "starter", // Default to starter if just created
+                    planName: plans.find(p => p.id === partner.subscription_tier)?.name || "Starter",
+                    startDate: new Date().toISOString(), // Mocks for now if DB columns don't exist
+                    renewalDate: new Date(Date.now() + 30*24*60*60*1000).toISOString(),
+                    status: "active",
+                    autoRenew: true
+                };
+            }
+        }
+    }
+
+    return NextResponse.json(createSuccessResponse({
+        plans,
+        current
+    }));
+
   } catch (error: any) {
+    console.error("GET Subscriptions Error:", error);
     return NextResponse.json(
       createErrorResponse(error.message || "Internal server error"),
       { status: 500 }

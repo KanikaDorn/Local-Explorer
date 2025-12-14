@@ -4,8 +4,9 @@ import { createErrorResponse, createSuccessResponse } from "@/lib/utils";
 
 export async function POST(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   try {
     const userId = req.headers.get("user-id");
     if (!userId) {
@@ -31,7 +32,7 @@ export async function POST(
     const body = await req.json();
     const action = body.action; // 'approve' | 'reject'
     const notes = body.notes || null;
-    const spotId = params.id;
+    const spotId = id;
 
     if (!action || !["approve", "reject"].includes(action)) {
       return NextResponse.json(createErrorResponse("Invalid action"), {

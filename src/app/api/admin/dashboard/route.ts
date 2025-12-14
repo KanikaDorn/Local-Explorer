@@ -54,12 +54,19 @@ export async function GET(req: NextRequest) {
       .select("*", { count: "exact", head: true })
       .eq("status", "pending");
 
-    const { data: subscriptions } = await supabase
-      .from("subscriptions")
-      .select("*");
+    const { count: activeSubscriptions } = await supabase
+      .from("profiles")
+      .select("*", { count: "exact", head: true })
+      .eq("is_partner", true);
+
+    const { data: transactions } = await supabase
+      .from("transactions")
+      .select("amount, status");
 
     const totalRevenue =
-      subscriptions?.reduce((sum, s) => sum + (s.price || 0), 0) || 0;
+      transactions
+        ?.filter((t) => t.status === 'approved' || t.status === 'paid' || t.status === 'completed')
+        .reduce((sum, t) => sum + (t.amount || 0), 0) || 0;
 
     return NextResponse.json({
       success: true,
@@ -68,7 +75,7 @@ export async function GET(req: NextRequest) {
         total_spots: totalSpots || 0,
         pending_reviews: pendingReviews || 0,
         total_revenue: totalRevenue,
-        active_subscriptions: subscriptions?.length || 0,
+        active_subscriptions: activeSubscriptions || 0,
         system_health: "Healthy",
         alerts: [],
       },

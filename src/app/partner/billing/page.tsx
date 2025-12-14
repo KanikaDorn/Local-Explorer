@@ -13,7 +13,7 @@ import {
   AlertCircle,
   Plus,
 } from "lucide-react";
-import { useToast } from "@/components/ui/toast";
+import { useToast } from "@/hooks/use-toast";
 
 interface Invoice {
   id: string;
@@ -50,7 +50,7 @@ export default function PartnerBilling() {
   const [billingData, setBillingData] = useState<BillingData | null>(null);
   const [loading, setLoading] = useState(true);
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
-  const { addToast } = useToast();
+  const { toast } = useToast();
 
   useEffect(() => {
     const loadBillingData = async () => {
@@ -82,16 +82,18 @@ export default function PartnerBilling() {
         link.download = `invoice-${invoiceId}.pdf`;
         link.click();
       } else {
-        addToast({
-          message: "Failed to download invoice",
-          duration: 3000,
+        toast({
+          title: "Error",
+          description: "Failed to download invoice",
+          variant: "destructive",
         });
       }
     } catch (err) {
       console.error("Error downloading invoice:", err);
-      addToast({
-        message: "Failed to download invoice",
-        duration: 3000,
+      toast({
+        title: "Error",
+        description: "Failed to download invoice",
+        variant: "destructive",
       });
     } finally {
       setDownloadingId(null);

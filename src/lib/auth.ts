@@ -65,10 +65,10 @@ export async function getUserProfile(userId: string) {
   }
 }
 
-export async function signUp(email: string, password: string) {
+export async function signUp(email: string, password: string, metaData: Record<string, any> = {}) {
   if (!IS_SUPABASE_CONFIGURED) {
     // Simple local signup for developer convenience
-    const user = { id: `local_${Date.now()}`, email };
+    const user = { id: `local_${Date.now()}`, email, ...metaData };
     writeLocalUser(user);
     return { user };
   }
@@ -79,6 +79,7 @@ export async function signUp(email: string, password: string) {
       password,
       options: {
         emailRedirectTo: `${window.location.origin}/auth/callback`,
+        data: metaData,
       },
     });
 
@@ -118,7 +119,7 @@ export async function signIn(email: string, password: string) {
 
     return data;
   } catch (error) {
-    console.error("Error signing in:", error);
+    console.warn("Error signing in:", error);
     throw error;
   }
 }
@@ -217,6 +218,50 @@ export async function updateUserProfile(
   }
 }
 
+
+export async function createPartnerProfile(
+  profileId: string,
+  companyName: string,
+  contactPhone: string,
+  contactEmail: string
+) {
+  try {
+    if (!IS_SUPABASE_CONFIGURED) {
+      // Local fallback
+      return {
+        id: `local_partner_${Date.now()}`,
+        profile_id: profileId,
+        company_name: companyName,
+        contact_phone: contactPhone,
+        contact_email: contactEmail,
+        accepted: false,
+        created_at: new Date().toISOString(),
+      };
+    }
+
+    const { data, error } = await supabaseBrowser
+      .from("partners")
+      .insert({
+        profile_id: profileId,
+        company_name: companyName,
+        contact_phone: contactPhone,
+        contact_email: contactEmail,
+        accepted: false, // Default to pending approval
+      })
+      .select()
+      .single();
+
+    if (error) {
+      throw error;
+    }
+
+    return data;
+  } catch (error) {
+    console.error("Error creating partner profile:", error);
+    throw error;
+  }
+}
+
 export function onAuthStateChange(callback: (user: any) => void) {
   if (!IS_SUPABASE_CONFIGURED) {
     // No-op fallback: invoke callback immediately with local user and return an unsubscribe stub
@@ -235,3 +280,4 @@ export function onAuthStateChange(callback: (user: any) => void) {
     callback(session?.user || null);
   });
 }
+

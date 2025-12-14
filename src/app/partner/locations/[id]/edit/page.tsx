@@ -7,7 +7,7 @@ import apiFetch from "@/lib/apiClient";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { useToast } from "@/components/ui/toast";
+import { useToast } from "@/hooks/use-toast";
 import MapPicker from "@/components/MapPicker";
 import supabaseBrowser from "@/lib/supabaseClient";
 import { Trash2, Save, ArrowLeft, Image, MapPin } from "lucide-react";
@@ -19,7 +19,13 @@ export default function EditLocationPage({
 }) {
   const { id } = params;
   const router = useRouter();
-  const { addToast } = useToast();
+  const { toast } = useToast();
+  const addToast = (props: { message: string; duration?: number; actionLabel?: string; onAction?: () => void }) => {
+    toast({
+      title: props.message,
+      duration: props.duration,
+    } as any);
+  };
   const [spot, setSpot] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [title, setTitle] = useState("");

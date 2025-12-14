@@ -92,10 +92,10 @@ export default function Home() {
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                    <div className="rounded-2xl overflow-hidden aspect-square relative">
-                      <Image src="https://images.unsplash.com/photo-1545152846-5baae6748530?auto=format&fit=crop&w=500" alt="Turkey 1" fill className="object-cover" />
+                      <Image src="https://i.imghippo.com/files/R7921qc.jpg" alt="Phnom Penh 1" fill className="object-cover" />
                    </div>
                     <div className="rounded-2xl overflow-hidden aspect-square relative">
-                      <Image src="https://images.unsplash.com/photo-1524231757912-21f4fe3a7200?auto=format&fit=crop&w=500" alt="Turkey 2" fill className="object-cover" />
+                      <Image src="https://i.imghippo.com/files/sBk3242cc.webp" alt="Phnom Penh 2" fill className="object-cover" />
                    </div>
                 </div>
              </div>

@@ -34,7 +34,8 @@ export async function GET(req: NextRequest) {
       .limit(10);
 
     if (invErr) {
-      return NextResponse.json(createErrorResponse(invErr.message), {
+      console.error("Billing API Error:", invErr);
+      return NextResponse.json(createErrorResponse(`Database Error: ${invErr.message} (${invErr.code})`), {
         status: 400,
       });
     }

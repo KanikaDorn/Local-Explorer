@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import PartnerHeader from "@/components/PartnerHeader";
 import PartnerSidebar from "@/components/PartnerSidebar";
+import supabaseBrowser from "@/lib/supabaseClient";
 
 export default function PartnerLayout({
   children,
@@ -21,44 +22,57 @@ export default function PartnerLayout({
   const [joinLoading, setJoinLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Allow signup page to bypass all protection
+  if (pathname === "/partner/signup") {
+    return <>{children}</>;
+  }
+
   useEffect(() => {
     const checkPartnerStatus = async () => {
       try {
-        const res = await apiFetch("/api/users/profile");
-        if (res?.success && res.data?.profile) {
-          const isPartnerFlagged = !!res.data.profile.is_partner;
-          setIsPartner(isPartnerFlagged);
-
-          // If user is flagged as partner but doesn't have a partner record yet, create it
-          if (isPartnerFlagged) {
-            try {
-              const partnerRes = await apiFetch("/api/partner/profile");
-              // If partner record doesn't exist (404 or error), create it
-              if (!partnerRes?.success) {
-                await apiFetch("/api/partner/profile", {
-                  method: "POST",
-                  body: JSON.stringify({}),
-                });
-              }
-            } catch (partnerErr) {
-              // Try to create partner record if it doesn't exist
-              try {
-                await apiFetch("/api/partner/profile", {
-                  method: "POST",
-                  body: JSON.stringify({}),
-                });
-              } catch (createErr) {
-                console.error("Failed to create partner record:", createErr);
-              }
-            }
-          }
-        } else {
+        // 1. Check local session first (faster & reliable after login)
+        const { data: { user } } = await supabaseBrowser.auth.getUser();
+        
+        if (!user) {
           router.push("/login");
+          return;
         }
+
+        // 2. Check if user is partner from metadata (no API call needed if metadata is fresh)
+        // If metadata is stale, we might need the API, but let's try metadata first.
+        const isPartnerFlagged = user.user_metadata?.is_partner === true;
+        
+        if (isPartnerFlagged) {
+           setIsPartner(true);
+           setLoading(false); // fast path!
+
+           // Background verification / ensure partner record exists
+           apiFetch("/api/partner/profile").then(async (res) => {
+             if (!res?.success) {
+               console.log("Creating missing partner record...");
+               await apiFetch("/api/partner/profile", { method: "POST", body: JSON.stringify({}) });
+             }
+           });
+           
+        } else {
+           // Fallback: Check API if metadata says false (maybe updated recently?)
+           try {
+             const res = await apiFetch("/api/users/profile");
+             // If the API confirms they are a partner, update local state
+             if (res?.success && res.data?.profile?.is_partner) {
+                setIsPartner(true);
+             } else {
+                // Definitely not a partner
+             }
+           } catch (apiErr) {
+             console.error("Profile check failed", apiErr);
+           }
+           setLoading(false);
+        }
+
       } catch (err) {
         console.error("Auth check failed:", err);
         setError("Unable to verify your account. Please log in again.");
-      } finally {
         setLoading(false);
       }
     };

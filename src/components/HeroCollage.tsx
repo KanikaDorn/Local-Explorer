@@ -1,5 +1,6 @@
 import Image from "next/image";
 import { MapPin } from "lucide-react";
+import Link from "next/link";
 
 export function HeroCollage() {
   return (
@@ -12,10 +13,17 @@ export function HeroCollage() {
         <p className="mt-6 text-lg text-gray-600 max-w-md">
           Find unique locations and authentic experiences. From rare encounters to remarkable destinations, we help you uncover the spark that turns every trip into a cherished story.
         </p>
-        <div className="mt-8 flex gap-4">
-           <button className="bg-orange-500 hover:bg-orange-600 text-white px-8 py-3 rounded-full font-medium transition-transform active:scale-95 shadow-lg shadow-orange-500/30">
-             Start Exploring
-           </button>
+        <div className="mt-8 flex flex-col sm:flex-row gap-4">
+           <Link href="/signup">
+             <button className="bg-orange-500 hover:bg-orange-600 text-white px-8 py-3 rounded-full font-medium transition-transform active:scale-95 shadow-lg shadow-orange-500/30 w-full sm:w-auto">
+               Join as Explorer
+             </button>
+           </Link>
+           <Link href="/partner/signup">
+             <button className="bg-white hover:bg-gray-100 text-gray-900 border border-gray-200 px-8 py-3 rounded-full font-medium transition-transform active:scale-95 shadow-sm w-full sm:w-auto">
+               Join as Partner
+             </button>
+           </Link>
         </div>
       </div>
 

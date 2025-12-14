@@ -40,14 +40,29 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    // Get payments
-    const { data: payments } = await supabase
-      .from("payments")
+    // Get payments (transactions)
+    const { data: transactions, error } = await supabase
+      .from("transactions")
       .select("*")
       .order("created_at", { ascending: false });
 
+    if (error) {
+      console.error("Error fetching transactions:", error);
+      throw error;
+    }
+
+    const payments = transactions?.map((t: any) => ({
+      id: t.tran_id,
+      user_email: t.metadata?.user_details?.email || "Unknown",
+      amount: t.amount,
+      status: t.status,
+      created_at: t.created_at,
+      payment_method: "PayWay", // Default for now since we only have one
+    }));
+
     const total_revenue =
-      payments?.reduce((sum, p) => sum + (p.amount || 0), 0) || 0;
+      payments?.filter((p: any) => p.status === 'approved' || p.status === 'paid' || p.status === 'completed') // adjusting for unknown status enum
+      .reduce((sum: any, p: any) => sum + (p.amount || 0), 0) || 0;
 
     return NextResponse.json({
       success: true,

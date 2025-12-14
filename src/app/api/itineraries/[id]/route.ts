@@ -3,10 +3,10 @@ import { createSupabaseServiceRole } from "@/lib/supabaseClient";
 
 export async function GET(
   _req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = params;
+    const { id } = await params;
     const supabase = createSupabaseServiceRole();
     const { data, error } = await supabase
       .from("itineraries")

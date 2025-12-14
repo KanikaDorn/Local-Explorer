@@ -3,10 +3,10 @@ import { createSupabaseServiceRole } from "@/lib/supabaseClient";
 
 export async function GET(
   _req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = params;
+    const { id } = await params;
     const supabase = createSupabaseServiceRole();
     const { data, error } = await supabase
       .from("spots")
@@ -24,10 +24,10 @@ export async function GET(
 
 export async function PUT(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = params;
+    const { id } = await params;
     const body = await req.json();
     const supabase = createSupabaseServiceRole();
     const { data, error } = await supabase
@@ -47,10 +47,10 @@ export async function PUT(
 
 export async function DELETE(
   _req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = params;
+    const { id } = await params;
     const supabase = createSupabaseServiceRole();
     const { error } = await supabase.from("spots").delete().eq("id", id);
     if (error)

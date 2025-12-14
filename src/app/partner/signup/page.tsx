@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { signUp, createUserProfile } from "@/lib/auth";
+import { signUp, createUserProfile, createPartnerProfile } from "@/lib/auth";
 import { UserRole } from "@/lib/types";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -31,29 +31,49 @@ export default function PartnerSignUpPage() {
     setError("");
 
     try {
-      // Step 1: Create user account
-      const result: any = await signUp(email, password);
+      // Step 1: Create user account with metadata
+      // Passing metadata ensures that if we have a DB trigger, it can create the profile.
+      // Even if not, the data is stored in Auth.
+      const result: any = await signUp(email, password, {
+        full_name: fullName,
+        role: UserRole.PARTNER,
+        is_partner: true,
+        company_name: companyName,
+        phone: contactPhone,
+      });
+      
       const user = result?.user || result?.data?.user || null;
       
       if (!user) {
         throw new Error("Failed to create user account");
       }
 
-      // Step 2: Create profile with partner role
+      // Step 2: Try to create profile directly (Best effort)
+      // This might fail if the user is required to verify email before having write access (RLS).
       try {
-        await createUserProfile(user.id, email, fullName || "", UserRole.PARTNER);
+         // Only attempt if we have a user ID. 
+         // Note: If email confirmation is enabled, 'user' exists but 'session' might be null.
+         const profile = await createUserProfile(user.id, email, fullName || "", UserRole.PARTNER);
+         
+         if (profile) {
+           await createPartnerProfile(profile.id, companyName, contactPhone, email);
+         }
       } catch (profileErr) {
-        console.error("Error creating profile after signup:", profileErr);
-        throw new Error("Failed to create partner profile");
+        console.warn("Could not create profile/partner data client-side (possibly waiting for email verification):", profileErr);
+        // We do not throw here, because the user IS created. 
+        // We rely on the user verifying email and then the profile being created/synced later or via trigger.
       }
 
-      // Step 3: Create partner record
-      // We need to get the auth token to make authenticated requests
-      // For now, redirect to login and let them join via the partner layout
-      // Or we could try to sign them in automatically
-      
-      // Redirect to login with a message
-      router.push("/login?message=Account created! Please sign in to complete partner setup");
+      // Step 3: Redirect logic
+      // If we have a session (auto-confirm enabled), go to partner dashboard.
+      // If we only have a user (confirmation required), go to login.
+      const session = result?.session || result?.data?.session;
+
+      if (session) {
+        window.location.href = "/partner"; // Force full reload to update auth state
+      } else {
+         router.push("/login?message=Account created! Please check your email to verify your account.");
+      }
     } catch (err: any) {
       setError(err.message || "An error occurred during signup");
     } finally {

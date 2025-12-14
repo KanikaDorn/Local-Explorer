@@ -66,11 +66,19 @@ export async function POST(req: Request) {
     const supabase = createSupabaseServiceRole();
 
     // find partner id
+    // find partner id
     const { data: profile } = await supabase
       .from("profiles")
       .select("id")
       .eq("auth_uid", userId)
       .single();
+      
+    if (!profile) {
+       return NextResponse.json(createErrorResponse("Profile not found"), {
+        status: 404,
+      }); 
+    }
+
     const { data: partner } = await supabase
       .from("partners")
       .select("id")
@@ -94,6 +102,7 @@ export async function POST(req: Request) {
       cover_path: body.cover_path || null,
       partner_id: partner.id,
       published: body.published || false,
+      special_offerings: body.special_offerings || null,
     };
 
     const { data, error } = await supabase

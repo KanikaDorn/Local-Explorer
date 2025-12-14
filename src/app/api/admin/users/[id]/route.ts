@@ -4,8 +4,9 @@ import { createErrorResponse, createSuccessResponse } from "@/lib/utils";
 
 export async function PUT(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   try {
     const userId = req.headers.get("user-id");
     if (!userId)
@@ -29,7 +30,7 @@ export async function PUT(
     const { data, error } = await supabase
       .from("profiles")
       .update(updates)
-      .eq("id", params.id)
+      .eq("id", id)
       .select()
       .single();
     if (error)
@@ -48,8 +49,9 @@ export async function PUT(
 
 export async function DELETE(
   _req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   try {
     const userId = _req.headers.get("user-id");
     if (!userId)
@@ -72,7 +74,7 @@ export async function DELETE(
     const { error } = await supabase
       .from("profiles")
       .delete()
-      .eq("id", params.id);
+      .eq("id", id);
     if (error)
       return NextResponse.json(createErrorResponse(error.message), {
         status: 500,

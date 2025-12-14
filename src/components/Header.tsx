@@ -49,12 +49,20 @@ export default function Header() {
     }
   };
 
+  // Determine role
+  const isPartner = user?.user_metadata?.is_partner === true;
+
   const navItems = [
-    { name: "Home", href: "/", icon: Layout },
-    { name: "Destinations", href: "/explore", icon: MapPin },
-    { name: "AI Planner", href: "/generate-plan", icon: Sparkles },
-    { name: "Bucket List", href: "/bucket-list", icon: Heart },
+    { name: "Home", href: "/", icon: Layout, show: true },
+    { name: "Destinations", href: "/explore", icon: MapPin, show: true },
+    { name: "AI Planner", href: "/generate-plan", icon: Sparkles, show: !isPartner },
+    { name: "Bucket List", href: "/bucket-list", icon: Heart, show: !isPartner },
+    { name: "Partner Dashboard", href: "/partner", icon: Layout, show: isPartner },
   ];
+
+  if (pathname?.startsWith("/partner")) {
+    return null;
+  }
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-white/80 backdrop-blur-md dark:bg-black/80 dark:border-white/10">
@@ -73,7 +81,7 @@ export default function Header() {
 
           {/* Desktop Nav */}
           <nav className="hidden md:flex items-center gap-6">
-            {navItems.map((item) => {
+            {navItems.filter(item => item.show).map((item) => {
               const isActive = pathname === item.href;
               const Icon = item.icon;
               return (
@@ -157,7 +165,7 @@ export default function Header() {
       {mobileMenuOpen && (
         <div className="md:hidden border-t border-gray-100 dark:border-gray-800 bg-white dark:bg-black">
           <div className="space-y-1 px-4 py-4">
-            {navItems.map((item) => {
+            {navItems.filter(item => item.show).map((item) => {
                const Icon = item.icon;
                const isActive = pathname === item.href;
                return (

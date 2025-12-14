@@ -37,6 +37,7 @@ interface DashboardMetrics {
 export default function PartnerDashboard() {
   const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     const loadMetrics = async () => {
@@ -46,9 +47,11 @@ export default function PartnerDashboard() {
           setMetrics(res.data);
         } else {
           console.error(res?.error || "Failed to load metrics");
+          setError(res?.error || "Failed to load dashboard data. Please try refreshing or contact support.");
         }
       } catch (err) {
         console.error("Error loading dashboard:", err);
+        setError("Network error or server unavailable.");
       } finally {
         setLoading(false);
       }
@@ -63,6 +66,19 @@ export default function PartnerDashboard() {
         <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-600"></div>
       </div>
     );
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center py-12 text-center">
+         <AlertCircle className="w-12 h-12 text-red-500 mb-4" />
+         <h2 className="text-xl font-bold text-gray-800 mb-2">Something went wrong</h2>
+         <p className="text-gray-600 mb-4">{error}</p>
+         <Button onClick={() => window.location.reload()} variant="outline">
+           Try Again
+         </Button>
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -221,3 +237,4 @@ export default function PartnerDashboard() {
       ) : null}
     </div>
   );
+}

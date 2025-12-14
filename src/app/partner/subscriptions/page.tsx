@@ -6,7 +6,8 @@ import apiFetch from "@/lib/apiClient";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Check, CreditCard, Zap, Shield } from "lucide-react";
-import { useToast } from "@/components/ui/toast";
+import { useToast } from "@/hooks/use-toast";
+import supabaseBrowser from "@/lib/supabaseClient";
 
 interface SubscriptionPlan {
   id: string;
@@ -97,11 +98,19 @@ export default function PartnerSubscriptions() {
     useState<CurrentSubscription | null>(null);
   const [loading, setLoading] = useState(true);
   const [upgrading, setUpgrading] = useState<Record<string, boolean>>({});
-  const { addToast } = useToast();
+  const { toast } = useToast();
+  const addToast = ({ message }: { message: string; duration?: number }) => toast({ title: message });
+
+  const [user, setUser] = useState<any>(null);
 
   useEffect(() => {
-    const loadSubscriptions = async () => {
+    const loadData = async () => {
       try {
+        // Load user
+        const { data: { user: currentUser } } = await supabaseBrowser.auth.getUser();
+        setUser(currentUser);
+
+        // Load subscriptions
         const res = await apiFetch("/api/partner/subscriptions");
         if (res?.success) {
           if (res.data?.plans) {
@@ -119,35 +128,65 @@ export default function PartnerSubscriptions() {
           }
         }
       } catch (err) {
-        console.error("Error loading subscriptions:", err);
+        console.error("Error loading data:", err);
       } finally {
         setLoading(false);
       }
     };
 
-    loadSubscriptions();
+    loadData();
   }, []);
 
   const handleUpgrade = async (planId: string) => {
     setUpgrading((prev) => ({ ...prev, [planId]: true }));
     try {
+      if (!user) {
+        addToast({ message: "Please log in first" });
+        return;
+      }
+
+      const userDetails = {
+        firstName: user.user_metadata?.full_name?.split(" ")[0] || "Partner",
+        lastName: user.user_metadata?.full_name?.split(" ").slice(1).join(" ") || "",
+        email: user.email,
+        phone: user.user_metadata?.phone || "",
+        id: user.id
+      };
+
       const res = await apiFetch("/api/partner/subscriptions/upgrade", {
         method: "POST",
-        body: JSON.stringify({ planId }),
+        body: JSON.stringify({ planId, user: userDetails }),
       });
 
-      if (res?.success) {
+      if (res?.success && res.data?.payload) {
+        const { payload, url } = res.data;
         addToast({
-          message: "Redirecting to checkout...",
+          message: "Redirecting to PayWay...",
           duration: 2000,
         });
-        // Redirect to payment page
-        setTimeout(() => {
-          window.location.href = res.data?.checkoutUrl || "/partner/billing";
-        }, 500);
+
+        // Create a hidden form and submit it to PayWay
+        const form = document.createElement("form");
+        form.method = "POST";
+        form.action = url;
+        // form.target = "_blank"; // Optional: open in new tab
+
+        // Add fields
+        Object.keys(payload).forEach((key) => {
+          const input = document.createElement("input");
+          input.type = "hidden";
+          input.name = key;
+          input.value = payload[key as keyof typeof payload];
+          form.appendChild(input);
+        });
+
+        document.body.appendChild(form);
+        form.submit();
+        
+        // Cleanup? Form submission usually navigates away.
       } else {
         addToast({
-          message: res?.error || "Failed to upgrade plan",
+          message: res?.error || "Failed to initiate payment",
           duration: 3000,
         });
       }
@@ -158,7 +197,10 @@ export default function PartnerSubscriptions() {
         duration: 3000,
       });
     } finally {
-      setUpgrading((prev) => ({ ...prev, [planId]: false }));
+      // Keep loading state if we are redirecting
+      // setUpgrading((prev) => ({ ...prev, [planId]: false })); 
+      // Actually, if it fails, we should reset. If success, we navigate away.
+      setTimeout(() => setUpgrading((prev) => ({ ...prev, [planId]: false })), 3000);
     }
   };
 

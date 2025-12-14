@@ -4,10 +4,11 @@ import { createSupabaseServiceRole } from "@/lib/supabaseClient";
 // Create a public share token for an itinerary (expires in 7 days by default)
 export async function POST(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   try {
-    const itineraryId = params.id;
+    const itineraryId = id;
     const supabase = createSupabaseServiceRole();
 
     const userId = req.headers.get("user-id");

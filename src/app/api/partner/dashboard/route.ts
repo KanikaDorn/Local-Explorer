@@ -39,12 +39,11 @@ export async function GET(req: NextRequest) {
     }
 
     // Get dashboard metrics
-    const { data: spots } = await supabase
+    // Query ALL spots for totals
+    const { data: allSpots } = await supabase
       .from("spots")
-      .select("id, title, views, saves, status, created_at")
-      .eq("partner_id", partner.id)
-      .limit(5)
-      .order("created_at", { ascending: false });
+      .select("views, saves, status")
+      .eq("partner_id", partner.id);
 
     const { count: totalSpots } = await supabase
       .from("spots")
@@ -61,12 +60,12 @@ export async function GET(req: NextRequest) {
     return NextResponse.json(
       createSuccessResponse({
         total_spots: totalSpots || 0,
-        total_views: (spots || []).reduce((sum, s) => sum + (s.views || 0), 0),
-        total_saves: (spots || []).reduce((sum, s) => sum + (s.saves || 0), 0),
-        pending_reviews: (spots || []).filter((s) => s.status === "pending")
+        total_views: (allSpots || []).reduce((sum, s) => sum + (s.views || 0), 0),
+        total_saves: (allSpots || []).reduce((sum, s) => sum + (s.saves || 0), 0),
+        pending_reviews: (allSpots || []).filter((s) => s.status === "pending")
           .length,
         revenue_this_month: 0,
-        active_subscription: partner.subscription_tier || "starter",
+        active_subscription: partner.subscription_plan_id || "starter",
         recent_spots:
           recentSpots?.map((s) => ({
             id: s.id,

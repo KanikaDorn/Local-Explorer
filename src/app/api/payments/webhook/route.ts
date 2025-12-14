@@ -30,7 +30,7 @@ export async function POST(req: NextRequest) {
       .eq("provider_ref", transactionId)
       .single()
       .then((r) => r.data)
-      .catch(() => null);
+      // .catch(() => null);
 
     // Map webhook status to our status
     const mappedStatus =
@@ -93,17 +93,4 @@ export async function POST(req: NextRequest) {
   }
 }
 
-    // Update subscription status if provided
-    if (body.subscription_id && body.status === "confirmed") {
-      await supabase
-        .from("subscriptions")
-        .update({ status: "active" })
-        .eq("id", body.subscription_id);
-    }
 
-    return NextResponse.json({ ok: true, payment: data }, { status: 200 });
-  } catch (err) {
-    console.error(err);
-    return NextResponse.json({ error: "internal" }, { status: 500 });
-  }
-}
