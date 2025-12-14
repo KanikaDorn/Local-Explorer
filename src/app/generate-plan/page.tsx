@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,6 +14,8 @@ import { toast } from "@/hooks/use-toast"; // Assuming you have a toast hook
 export default function GeneratePlanPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [authLoading, setAuthLoading] = useState(true);
+  const [user, setUser] = useState<any>(null);
   const [formData, setFormData] = useState({
     theme: "",
     budget: "",
@@ -21,6 +23,28 @@ export default function GeneratePlanPage() {
     interests: [] as string[],
     party_size: "couple"
   });
+
+  // Check authentication on page load
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const currentUser = await getCurrentUser();
+        if (!currentUser) {
+          // Redirect to login with a 'next' param to return here after login
+          router.push("/login?next=/generate-plan");
+          return;
+        }
+        setUser(currentUser);
+      } catch (error) {
+        console.error("Auth check error:", error);
+        router.push("/login?next=/generate-plan");
+      } finally {
+        setAuthLoading(false);
+      }
+    };
+
+    checkAuth();
+  }, [router]);
 
   const moodOptions = [
     { id: "relaxed", label: "Relaxed", emoji: "🧘" },

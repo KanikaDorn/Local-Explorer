@@ -8,11 +8,11 @@ export default function Home() {
   /* Removed topDestinations */
 
   const latestStories = [
-    { title: "10 Hidden Cafes in Phnom Penh", category: "Food & Drink", image: "https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&w=800" },
-    { title: "Best Hotels with Points", category: "Hotels", image: "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=800" },
-    { title: "Budget Guide to Kampot", category: "Travel Budget", image: "https://images.unsplash.com/photo-1534008897995-27a23e859048?auto=format&fit=crop&w=800" },
-    { title: "Night Market Street Food", category: "Culture", image: "https://images.unsplash.com/photo-1555126634-323283e090fa?auto=format&fit=crop&w=800" },
-    { title: "Temple Guide 101", category: "History", image: "https://images.unsplash.com/photo-1548013146-72479768bada?auto=format&fit=crop&w=800" },
+    { title: "10 Hidden Cafes in Phnom Penh", category: "Food & Drink", image: "/Brown-coffee-Phnom-Penh.jpg" },
+    { title: "Best Boutique Hotels in Siem Reap", category: "Hotels", image: "/Copy-of-DSC_3984-Edit.jpg" },
+    { title: "Budget Guide to Kampot Province", category: "Travel Budget", image: "/jeyakumaran-mayooresan-hxQ6jA1RV3s-unsplash-scaled-e1700055246433-1024x607.jpg" },
+    { title: "Riverside Night Market Food Guide", category: "Culture", image: "/Riverside Night Market.jpeg" },
+    { title: "Angkor Temple Complex Guide", category: "History", image: "/The-6-Best-Things-to-do-in-Phnom-Penh-Royal-Palace.jpg" },
   ];
 
   return (
@@ -38,12 +38,12 @@ export default function Home() {
               {/* Featured Main Story */}
               <div className="lg:col-span-1 group cursor-pointer">
                  <div className="rounded-2xl overflow-hidden aspect-[4/3] mb-4 relative">
-                    <Image src="https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?auto=format&fit=crop&w=800" alt="Food" fill className="object-cover group-hover:scale-105 transition-transform duration-500" />
+                    <Image src="/Emily-Lush-coffee-breakfast-phnom-penh-artillery-2.jpg" alt="Cambodian Restaurant" fill className="object-cover group-hover:scale-105 transition-transform duration-500" />
                  </div>
                  <div className="text-orange-500 text-xs font-semibold mb-2">Food and Drink</div>
-                 <h3 className="font-bold text-xl mb-2 group-hover:text-orange-600 transition-colors">Los Angeles food & drink guide: 10 things to try</h3>
+                 <h3 className="font-bold text-xl mb-2 group-hover:text-orange-600 transition-colors">Phnom Penh Food & Drink Guide: 10 Must-Try Dishes</h3>
                  <p className="text-gray-500 text-sm line-clamp-3">
-                   Discover the best foodie spots in LA, from street tacos to high-end dining experiences that will leave you wanting more.
+                   Discover the best Cambodian cuisine from street food at the night markets to authentic Khmer restaurants along the Mekong riverside.
                  </p>
               </div>
 
@@ -66,10 +66,10 @@ export default function Home() {
         </div>
       </section>
 
-       {/* Trekker's Highlights (Reviews) - Minimal version based on image */}
+       {/* Explorer's Highlights (Reviews) - Cambodia focused */}
        <section className="bg-white pb-16">
           <div className="max-w-7xl mx-auto px-4">
-             <h2 className="text-3xl font-bold font-serif mb-8">Trekker&apos;s Highlights</h2>
+             <h2 className="text-3xl font-bold font-serif mb-8">Explorer&apos;s Highlights</h2>
              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center bg-gray-50 rounded-3xl p-8">
                 <div>
                    <div className="flex items-center gap-3 mb-4">
@@ -77,25 +77,25 @@ export default function Home() {
                           <Image src="https://i.pravatar.cc/150?img=32" alt="Avatar" fill className="object-cover" />
                       </div>
                       <div>
-                         <div className="font-bold">Maria Angelica</div>
-                         <div className="text-xs text-orange-500">Travel Enthusiast</div>
+                         <div className="font-bold">Sophea Chann</div>
+                         <div className="text-xs text-orange-500">Cambodia Explorer</div>
                       </div>
                    </div>
                    <div className="flex gap-1 mb-4">
                       {[1,2,3,4,5].map(i => <Star key={i} className="h-4 w-4 fill-yellow-400 text-yellow-400" />)}
                    </div>
-                   <h3 className="font-bold text-lg mb-2">An Unforgettable Journey Through Turkey</h3>
+                   <h3 className="font-bold text-lg mb-2">An Unforgettable Journey Through Cambodia</h3>
                    <p className="text-gray-600 text-sm leading-relaxed">
-                      &quot;Absolutely loved the experience! The guide was knowledgeable and the spots we visited were breathtaking. 
-                      Cappadocia hot air balloon ride was the highlight of my year. Highly recommend using Globe Trekker for planning.&quot;
+                      &quot;Local Explorer helped me discover the real Cambodia! From sunrise at Angkor Wat to hidden coffee shops in Phnom Penh, 
+                      every recommendation was perfect. The riverside night markets were absolutely magical. Highly recommend!&quot;
                    </p>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                    <div className="rounded-2xl overflow-hidden aspect-square relative">
-                      <Image src="https://i.imghippo.com/files/R7921qc.jpg" alt="Phnom Penh 1" fill className="object-cover" />
+                      <Image src="/phnom-penh-temple-coffee.jpg" alt="Phnom Penh Temple Coffee" fill className="object-cover" />
                    </div>
                     <div className="rounded-2xl overflow-hidden aspect-square relative">
-                      <Image src="https://i.imghippo.com/files/sBk3242cc.webp" alt="Phnom Penh 2" fill className="object-cover" />
+                      <Image src="/vietnamese-restaurant-in-phnom-penh-1.jpg" alt="Restaurant in Phnom Penh" fill className="object-cover" />
                    </div>
                 </div>
              </div>
@@ -104,10 +104,10 @@ export default function Home() {
 
       {/* Newsletter Section - Full Width Image */}
       <section className="relative h-[400px] flex items-center justify-center text-center text-white">
-         <Image src="https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?auto=format&fit=crop&w=2000" alt="Newsletter" fill className="object-cover brightness-50" />
+         <Image src="/Phnom-Penh.jpeg" alt="Phnom Penh Cambodia" fill className="object-cover brightness-50" />
          <div className="relative z-10 max-w-2xl px-4">
-            <h2 className="text-4xl font-serif font-bold mb-4">Get Your Travel Inspiration Straight to Your Inbox</h2>
-            <p className="mb-8 text-gray-200">Join our community of over 50,000 travelers and get exclusive tips and deals.</p>
+            <h2 className="text-4xl font-serif font-bold mb-4">Discover Cambodia&apos;s Best Kept Secrets</h2>
+            <p className="mb-8 text-gray-200">Join our community of Cambodia explorers and get exclusive tips on hidden gems and local experiences.</p>
             <div className="flex flex-col sm:flex-row gap-3 bg-white/10 p-2 rounded-full backdrop-blur-sm border border-white/20">
                <input type="email" placeholder="Enter your email address" className="bg-transparent border-none text-white placeholder-gray-300 focus:ring-0 px-4 py-2 flex-1 outline-none" />
                <button className="bg-orange-500 hover:bg-orange-600 text-white px-8 py-2 rounded-full font-medium transition-colors">

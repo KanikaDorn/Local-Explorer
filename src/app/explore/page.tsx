@@ -6,169 +6,165 @@ import { getCurrentUser } from "@/lib/auth";
 import { ExploreHero } from "@/components/ExploreHero";
 import { CategoryBar } from "@/components/CategoryBar";
 import { ExploreCard } from "@/components/ExploreCard";
-import { Button } from "@/components/ui/button";
-import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
-// import { getSpots } from "@/lib/spots"; 
-import { Spot } from "@/lib/types";
+import { ExploreDetailModal } from "@/components/ExploreDetailModal";
 
-// Mock Data for specific Cambodian sections
-const PHNOM_PENH_CAFES = [
+// Unified explore spots data with local Cambodia images
+const EXPLORE_SPOTS = [
+  // Cafes
   {
     id: "khema-cafe",
-    title: "Khema Café – BKK1",
-    city: "Phnom Penh",
-    price_level: 2, // $$
-    price_text: "$3 / drink",
-    rating: 4.9,
-    reviews: 320,
-    cover_url: "https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&w=800"
+    title: "Khéma Café – BKK1",
+    category: "cafe",
+    location: "Phnom Penh, Cambodia",
+    description: "An upscale French-Khmer café offering artisan coffee, fresh pastries, and a refined atmosphere in the heart of BKK1.",
+    image: "/Brown-coffee-Phnom-Penh.jpg",
+    address: "No. 44, Street 57, BKK1, Phnom Penh"
   },
   {
     id: "brown-coffee",
     title: "Brown Coffee – Riverside",
-    city: "Phnom Penh",
-    price_level: 2,
-    price_text: "$2.5 / drink",
-    rating: 4.7,
-    reviews: 512,
-    cover_url: "https://images.unsplash.com/photo-1509042239860-f550ce710b93?auto=format&fit=crop&w=800"
+    category: "cafe",
+    location: "Phnom Penh, Cambodia",
+    description: "Cambodia's beloved coffee chain with river views, serving signature iced lattes and fresh brews in a modern setting.",
+    image: "/Emily-Lush-coffee-breakfast-phnom-penh-artillery-2.jpg",
+    address: "Sisowath Quay, Phnom Penh"
+  },
+  {
+    id: "cafe-lotus",
+    title: "Café Lotus",
+    category: "cafe",
+    location: "Phnom Penh, Cambodia",
+    description: "A cozy café near the National Museum, perfect for post-temple relaxation with traditional Khmer coffee blends.",
+    image: "/Cafe Lotus.jpg",
+    address: "Near National Museum, Phnom Penh"
   },
   {
     id: "factory-cafe",
     title: "Factory Café – Chak Angre",
-    city: "Phnom Penh",
-    price_level: 2,
-    price_text: "$2.5 / drink",
-    rating: 4.8,
-    reviews: 180,
-    cover_url: "https://images.unsplash.com/photo-1497935586351-b67a49e012bf?auto=format&fit=crop&w=800"
+    category: "cafe",
+    location: "Phnom Penh, Cambodia",
+    description: "Industrial-chic café with exposed brick, artisan roasts, and a menu of creative beverages and light bites.",
+    image: "/phnom-penh-temple-coffee.jpg",
+    address: "Chak Angre, Phnom Penh"
+  },
+  // Relax
+  {
+    id: "riverside-walk",
+    title: "Sisowath Quay Riverside",
+    category: "relax",
+    location: "Phnom Penh, Cambodia",
+    description: "A scenic 3km riverfront promenade along the Tonle Sap and Mekong rivers, perfect for evening strolls and sunset views.",
+    image: "/Phnom-Penh.jpeg",
+    address: "Sisowath Quay, Phnom Penh"
   },
   {
-    id: "tini-cafe",
-    title: "TINI Café – Toul Tom Poung",
-    city: "Phnom Penh",
-    price_level: 2,
-    price_text: "$3 / drink",
-    rating: 4.8,
-    reviews: 210,
-    cover_url: "https://images.unsplash.com/photo-1521017432531-fbd92d768814?auto=format&fit=crop&w=800"
-  },
-];
-
-const KAMPOT_RELAX = [
-  {
-    id: "river-park",
-    title: "River Park Kampot",
-    city: "Kampot",
-    price_level: 2,
-    price_text: "Entry $5",
-    rating: 5.0,
-    reviews: 89,
-    cover_url: "https://images.unsplash.com/photo-1519451241324-20b4ea2c4220?auto=format&fit=crop&w=800"
+    id: "night-market",
+    title: "Riverside Night Market",
+    category: "relax",
+    location: "Phnom Penh, Cambodia",
+    description: "A vibrant evening market with street food stalls, local crafts, and live entertainment along the riverfront.",
+    image: "/Riverside Night Market.jpeg",
+    address: "Sisowath Quay, Phnom Penh"
   },
   {
-    id: "les-manguiers",
-    title: "Les Manguiers Resort",
-    city: "Kampot",
-    price_level: 2,
-    price_text: "Day Pass $7",
-    rating: 4.9,
-    reviews: 150,
-    cover_url: "https://images.unsplash.com/photo-1540541338287-41700207dee6?auto=format&fit=crop&w=800"
+    id: "kampot-salt-fields",
+    title: "Kampot Salt Fields",
+    category: "relax",
+    location: "Kampot, Cambodia",
+    description: "Peaceful salt flats stretching to the horizon, offering stunning sunset photography and a glimpse into traditional salt harvesting.",
+    image: "/jeyakumaran-mayooresan-hxQ6jA1RV3s-unsplash-scaled-e1700055246433-1024x607.jpg",
+    address: "Kampot Province"
   },
   {
-    id: "arcadia",
-    title: "Arcadia Waterpark",
-    city: "Kampot",
-    price_level: 2,
-    price_text: "Entry $5",
-    rating: 4.7,
-    reviews: 300,
-    cover_url: "https://images.unsplash.com/photo-1533240332313-0da4d14774de?auto=format&fit=crop&w=800"
+    id: "food-experience",
+    title: "Local Khmer Dining",
+    category: "relax",
+    location: "Phnom Penh, Cambodia",
+    description: "Experience authentic Cambodian cuisine with fresh river fish, amok curry, and local delicacies in a relaxed setting.",
+    image: "/grilled-tonle-sap-fish-siem-reap-fine-dining.jpg",
+    address: "Various locations in Phnom Penh"
   },
+  // Culture
   {
-    id: "salt-fields",
-    title: "Kampot Salt Fields Viewing Spot",
-    city: "Kampot",
-    price_level: 1,
-    price_text: "Free",
-    rating: 4.8,
-    reviews: 120,
-    cover_url: "https://images.unsplash.com/photo-1605648916361-9bc12ad6a569?auto=format&fit=crop&w=800"
-  },
-];
-
-const SIEM_REAP_CULTURE = [
-  {
-    id: "angkor-wat",
-    title: "Angkor Wat Complex",
-    city: "Siem Reap",
-    price_level: 4,
-    price_text: "Entry $37",
-    rating: 5.0,
-    reviews: 15000,
-    cover_url: "https://images.unsplash.com/photo-1548013146-72479768bada?auto=format&fit=crop&w=800"
+    id: "royal-palace",
+    title: "Royal Palace Complex",
+    category: "culture",
+    location: "Phnom Penh, Cambodia",
+    description: "The stunning royal residence featuring the Silver Pagoda, Throne Hall, and beautiful Khmer architecture dating back to the 1860s.",
+    image: "/The-6-Best-Things-to-do-in-Phnom-Penh-Royal-Palace.jpg",
+    address: "Samdach Sothearos Blvd, Phnom Penh"
   },
   {
     id: "national-museum",
-    title: "Angkor National Museum",
-    city: "Siem Reap",
-    price_level: 3,
-    price_text: "Entry $12",
-    rating: 4.8,
-    reviews: 850,
-    cover_url: "https://images.unsplash.com/photo-1599813354224-4c55c0aae462?auto=format&fit=crop&w=800"
+    title: "National Museum of Cambodia",
+    category: "culture",
+    location: "Phnom Penh, Cambodia",
+    description: "Home to the world's largest collection of Khmer art, including sculptures, ceramics, and artifacts from Angkor-era temples.",
+    image: "/National Museum of Cambodia.jpg",
+    address: "Street 13, Phnom Penh"
   },
   {
-    id: "old-market",
-    title: "Old Market & Night Market",
-    city: "Siem Reap",
-    price_level: 1,
-    price_text: "Free",
-    rating: 4.7,
-    reviews: 2100,
-    cover_url: "https://images.unsplash.com/photo-1555126634-323283e090fa?auto=format&fit=crop&w=800"
+    id: "wat-phnom",
+    title: "Wat Phnom Temple",
+    category: "culture",
+    location: "Phnom Penh, Cambodia",
+    description: "The legendary founding temple of Phnom Penh, set atop a 27-meter hill with peaceful gardens and resident elephants.",
+    image: "/Copy-of-DSC_3984-Edit.jpg",
+    address: "Norodom Boulevard, Phnom Penh"
   },
   {
-    id: "wat-damnak",
-    title: "Wat Damnak",
-    city: "Siem Reap",
-    price_level: 1,
-    price_text: "Free",
-    rating: 4.9,
-    reviews: 320,
-    cover_url: "https://images.unsplash.com/photo-1623140156943-7f7cd44923e3?auto=format&fit=crop&w=800"
+    id: "khmer-cuisine",
+    title: "Traditional Khmer Cuisine",
+    category: "culture",
+    location: "Cambodia",
+    description: "Discover the rich flavors of Cambodian cooking – from fish amok to lok lak – that blend influences from Thailand, Vietnam, and India.",
+    image: "/572-khmer-cuisine.jpg",
+    address: "Various locations throughout Cambodia"
   },
 ];
+
+interface SpotData {
+  id: string;
+  title: string;
+  category: string;
+  location: string;
+  description: string;
+  image: string;
+  address?: string;
+}
 
 export default function ExplorePage() {
   const router = useRouter();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [category, setCategory] = useState("Cafés");
+  const [category, setCategory] = useState("all");
+  const [selectedSpot, setSelectedSpot] = useState<SpotData | null>(null);
 
   useEffect(() => {
     const checkAuth = async () => {
       const user = await getCurrentUser();
       if (!user) {
-        // For development/preview, we might want to bypass or specific login
-        // But per valid request, user must be logged in
         router.push("/login?redirect=/explore");
       } else {
         setIsAuthenticated(true);
       }
-      if (user) setIsLoading(false); // Only set loading false if existing, else redirect happens
+      if (user) setIsLoading(false);
     };
 
     checkAuth();
   }, [router]);
 
+  // Filter spots based on selected category
+  const filteredSpots = category === "all" 
+    ? EXPLORE_SPOTS 
+    : EXPLORE_SPOTS.filter(spot => spot.category === category);
+
   if (isLoading) {
     return (
-      <div className="flex h-screen items-center justify-center bg-[#FDFBF7] dark:bg-black">
+      <div className="flex h-screen items-center justify-center bg-[#FDF8F3]">
         <div className="animate-pulse flex flex-col items-center">
-            <div className="h-12 w-12 bg-gray-200 rounded-full mb-4"></div>
-            <div className="h-4 w-32 bg-gray-200 rounded"></div>
+          <div className="h-12 w-12 bg-[#D4AF37]/30 rounded-full mb-4"></div>
+          <div className="h-4 w-32 bg-[#D4AF37]/20 rounded"></div>
         </div>
       </div>
     );
@@ -177,7 +173,7 @@ export default function ExplorePage() {
   if (!isAuthenticated) return null;
 
   return (
-    <div className="min-h-screen bg-[#FDFBF7] dark:bg-black pb-20 font-sans">
+    <div className="min-h-screen bg-[#FDF8F3] pb-20 font-sans">
       
       {/* Container */}
       <div className="max-w-[1920px] mx-auto px-4 md:px-8 pt-6">
@@ -185,91 +181,58 @@ export default function ExplorePage() {
         {/* Hero Section */}
         <ExploreHero />
 
-        {/* Categories */}
-        <div className="sticky top-[64px] z-30 bg-[#FDFBF7]/95 backdrop-blur-sm dark:bg-black/95 pt-2 mb-8 border-b border-gray-100 dark:border-gray-800">
-            <CategoryBar selectedCategory={category} onSelectCategory={setCategory} />
+        {/* Category Filter Bar */}
+        <div className="sticky top-[64px] z-30 bg-[#FDF8F3]/95 backdrop-blur-sm pt-2 mb-6">
+          <CategoryBar selectedCategory={category} onSelectCategory={setCategory} />
         </div>
 
-        {/* Content Sections */}
-        <div className="space-y-16 max-w-[1600px] mx-auto">
-          
-          {/* Section 1: Phnom Penh Cafes */}
-          <section>
-            <div className="flex items-center justify-between mb-6">
-               <h3 className="text-2xl font-bold text-gray-900 dark:text-white font-serif">⭐ Top-Rated Cafés in Phnom Penh</h3>
-               <div className="flex gap-2">
-                 <Button variant="outline" size="icon" className="rounded-full h-8 w-8 hover:bg-[#D4AF37] hover:text-white hover:border-[#D4AF37]"><ChevronLeft className="h-4 w-4" /></Button>
-                 <Button variant="outline" size="icon" className="rounded-full h-8 w-8 hover:bg-[#D4AF37] hover:text-white hover:border-[#D4AF37]"><ChevronRight className="h-4 w-4" /></Button>
-               </div>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                {PHNOM_PENH_CAFES.map(spot => (
-                    <ExploreCard 
-                      key={spot.id} 
-                      title={spot.title}
-                      location={spot.city}
-                      price={spot.price_text}
-                      rating={spot.rating}
-                      reviews={spot.reviews}
-                      image={spot.cover_url}
-                      onClick={() => {}} 
-                    />
-                ))}
-            </div>
-          </section>
+        {/* Results Count */}
+        <div className="max-w-[1400px] mx-auto mb-6">
+          <p className="text-gray-500 text-sm">
+            Showing <span className="font-semibold text-gray-900">{filteredSpots.length}</span> places
+            {category !== "all" && (
+              <span> in <span className="font-semibold text-[#D4AF37]">{category.charAt(0).toUpperCase() + category.slice(1)}</span></span>
+            )}
+          </p>
+        </div>
 
-          {/* Section 2: Relaxing Places in Kampot */}
-          <section>
-            <div className="flex items-center justify-between mb-6">
-               <h3 className="text-2xl font-bold text-gray-900 dark:text-white font-serif">🌿 Relaxing Places in Kampot</h3>
-               <div className="flex gap-2">
-                 <Button variant="outline" size="icon" className="rounded-full h-8 w-8 hover:bg-[#D4AF37] hover:text-white hover:border-[#D4AF37]"><ChevronLeft className="h-4 w-4" /></Button>
-                 <Button variant="outline" size="icon" className="rounded-full h-8 w-8 hover:bg-[#D4AF37] hover:text-white hover:border-[#D4AF37]"><ChevronRight className="h-4 w-4" /></Button>
-               </div>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                 {KAMPOT_RELAX.map(spot => (
-                    <ExploreCard 
-                      key={spot.id} 
-                      title={spot.title}
-                      location={spot.city}
-                      price={spot.price_text}
-                      rating={spot.rating}
-                      reviews={spot.reviews}
-                      image={spot.cover_url}
-                      onClick={() => {}}
-                    />
-                ))}
-            </div>
-          </section>
+        {/* Explore Cards Grid */}
+        <div className="max-w-[1400px] mx-auto">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {filteredSpots.map(spot => (
+              <ExploreCard 
+                key={spot.id}
+                title={spot.title}
+                location={spot.location}
+                category={spot.category}
+                description={spot.description}
+                image={spot.image}
+                onClick={() => setSelectedSpot(spot)}
+              />
+            ))}
+          </div>
 
-           {/* Section 3: Cultural & Heritage in Siem Reap */}
-           <section>
-            <div className="flex items-center justify-between mb-6">
-               <h3 className="text-2xl font-bold text-gray-900 dark:text-white font-serif">🕌 Cultural & Heritage in Siem Reap</h3>
-               <div className="flex gap-2">
-                 <Button variant="outline" size="icon" className="rounded-full h-8 w-8 hover:bg-[#D4AF37] hover:text-white hover:border-[#D4AF37]"><ChevronLeft className="h-4 w-4" /></Button>
-                 <Button variant="outline" size="icon" className="rounded-full h-8 w-8 hover:bg-[#D4AF37] hover:text-white hover:border-[#D4AF37]"><ChevronRight className="h-4 w-4" /></Button>
-               </div>
+          {/* Empty State */}
+          {filteredSpots.length === 0 && (
+            <div className="text-center py-20">
+              <p className="text-gray-500 text-lg">No places found in this category.</p>
+              <button 
+                onClick={() => setCategory("all")}
+                className="mt-4 text-[#D4AF37] font-medium hover:underline"
+              >
+                View all places
+              </button>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                 {SIEM_REAP_CULTURE.map(spot => (
-                    <ExploreCard 
-                       key={spot.id} 
-                       title={spot.title}
-                       location={spot.city}
-                       price={spot.price_text}
-                       rating={spot.rating}
-                       reviews={spot.reviews}
-                       image={spot.cover_url}
-                       onClick={() => {}}
-                    />
-                ))}
-            </div>
-          </section>
-
+          )}
         </div>
       </div>
+
+      {/* Detail Modal */}
+      <ExploreDetailModal 
+        isOpen={!!selectedSpot}
+        onClose={() => setSelectedSpot(null)}
+        data={selectedSpot}
+      />
     </div>
   );
 }

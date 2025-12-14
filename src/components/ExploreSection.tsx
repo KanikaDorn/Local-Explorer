@@ -6,7 +6,7 @@ import { ExploreDetailModal } from "./ExploreDetailModal";
 import { Button } from "./ui/button";
 import { ArrowRight } from "lucide-react";
 
-// Data Definition
+// Data Definition - Using local Cambodia images
 const PHNOM_PENH_DESTINATIONS = [
   {
     id: "royal-palace",
@@ -18,9 +18,9 @@ const PHNOM_PENH_DESTINATIONS = [
     reviews: 3240,
     description: "A complex of buildings which serves as the royal residence of the King of Cambodia. The Kings of Cambodia have occupied it since it was built in the 1860s, with a period of absence when the country came into turmoil during and after the reign of the Khmer Rouge. The palace was constructed after King Norodom relocated the royal capital from Oudong to Phnom Penh in the mid-19th century.",
     images: [
-      "https://images.unsplash.com/photo-1583207686526-748af6a64426?auto=format&fit=crop&w=800",
-      "https://images.unsplash.com/photo-1621841369766-3829dc744f6f?auto=format&fit=crop&w=800",
-      "https://images.unsplash.com/photo-1596716075677-4c281352f2f7?auto=format&fit=crop&w=800"
+      "/The-6-Best-Things-to-do-in-Phnom-Penh-Royal-Palace.jpg",
+      "/National Museum of Cambodia.jpg",
+      "/Phnom-Penh.jpeg"
     ]
   },
   {
@@ -33,9 +33,9 @@ const PHNOM_PENH_DESTINATIONS = [
     reviews: 1890,
     description: "Wat Phnom is a Buddhist temple (wat) that is the tallest religious structure in the city. It is located on a hill 27 meters high. Legend relates that Daun Penh, a wealthy widow, found four bronze statues of the Buddha in a hollow Log floating in the river. She had a small shrine built on an artificial hill made by the people living in the village to protect the sacred statues.",
     images: [
-      "https://images.unsplash.com/photo-1575454687612-4fb8e96637b5?auto=format&fit=crop&w=800",
-      "https://images.unsplash.com/photo-1707018314643-690243d932b1?q=80&w=2070&auto=format&fit=crop", 
-      "https://images.unsplash.com/photo-1647493779836-e0e64b8849b2?q=80&w=2070&auto=format&fit=crop"
+      "/phnom-penh-temple-coffee.jpg",
+      "/National Museum of Cambodia.jpg",
+      "/Copy-of-DSC_3984-Edit.jpg"
     ]
   },
   {
@@ -48,9 +48,9 @@ const PHNOM_PENH_DESTINATIONS = [
     reviews: 2100,
     description: "Phsar Tuol Tom Poung, also known as the Russian Market, is the most popular market among tourists and expats and arguably the best place to pick up souvenirs. You'll find everything from clothing, souvenirs, artifacts, and antiques to traditional handicrafts. The food area is also a must-visit for authentic local street food.",
     images: [
-      "https://images.unsplash.com/photo-1555126634-323283e090fa?auto=format&fit=crop&w=800",
-      "https://images.unsplash.com/photo-1633512399676-350711cc686c?q=80&w=2070&auto=format&fit=crop",
-      "https://images.unsplash.com/photo-1691136152179-88037303f90e?q=80&w=2070&auto=format&fit=crop"
+      "/Riverside Night Market.jpeg",
+      "/vietnamese-restaurant-in-phnom-penh-1.jpg",
+      "/Emily-Lush-coffee-breakfast-phnom-penh-artillery-2.jpg"
     ]
   },
   {
@@ -63,9 +63,9 @@ const PHNOM_PENH_DESTINATIONS = [
     reviews: 4500,
     description: "Sisowath Quay is a 3-kilometer strip along the intersection of the Mekong and Tonle Sap rivers. It is the most popular area in the city for tourists and locals alike, lined with hotels, restaurants, bars, and cafes. In the evening, the riverside comes alive with people exercising, walking, and enjoying the breeze.",
     images: [
-      "https://images.unsplash.com/photo-1572569566998-31adea41b526?auto=format&fit=crop&w=800", /* Placeholder reuse */
-      "https://images.unsplash.com/photo-1632734139040-3b47963690d7?q=80&w=1974&auto=format&fit=crop",
-      "https://images.unsplash.com/photo-1563720786526-748af6a64426?auto=format&fit=crop&w=800" /* Placeholder reuse */
+      "/Phnom-Penh.jpeg",
+      "/Cafe Lotus.jpg",
+      "/Brown-coffee-Phnom-Penh.jpg"
     ]
   }
 ];
@@ -97,9 +97,8 @@ export const ExploreSection = () => {
              image={dest.images[0]}
              title={dest.title}
              location={dest.location}
-             price={dest.price}
-             rating={dest.rating}
-             reviews={dest.reviews}
+             category={dest.category}
+             description={dest.description}
              onClick={() => setSelectedDestination(dest)}
            />
          ))}
@@ -108,7 +107,14 @@ export const ExploreSection = () => {
       <ExploreDetailModal 
         isOpen={!!selectedDestination}
         onClose={() => setSelectedDestination(null)}
-        data={selectedDestination}
+        data={selectedDestination ? {
+          id: selectedDestination.id,
+          title: selectedDestination.title,
+          location: selectedDestination.location,
+          category: selectedDestination.category,
+          description: selectedDestination.description,
+          image: selectedDestination.images[0],
+        } : null}
       />
     </section>
   );

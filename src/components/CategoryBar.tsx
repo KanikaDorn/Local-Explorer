@@ -1,25 +1,13 @@
-import { 
-  Coffee, 
-  Trees, 
-  Landmark, 
-  Armchair, 
-  Utensils, 
-  Ship, 
-  Palette, 
-  Music
-} from "lucide-react";
+"use client";
+
+import { Coffee, Leaf, Landmark } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Button } from "./ui/button";
 
 const CATEGORIES = [
-  { name: "Cafés", icon: Coffee },
-  { name: "Relaxing Spots", icon: Armchair }, // or Sunrise/Sunset icon
-  { name: "Cultural", icon: Landmark },
-  { name: "Nature", icon: Trees },
-  { name: "Local Food", icon: Utensils },
-  { name: "Riverside", icon: Ship },
-  { name: "Art Spaces", icon: Palette },
-  { name: "Nightlife", icon: Music },
+  { name: "All", icon: null, value: "all" },
+  { name: "Cafe", icon: Coffee, value: "cafe" },
+  { name: "Relax", icon: Leaf, value: "relax" },
+  { name: "Culture", icon: Landmark, value: "culture" },
 ];
 
 interface CategoryBarProps {
@@ -27,34 +15,29 @@ interface CategoryBarProps {
   onSelectCategory: (category: string) => void;
 }
 
-export function CategoryBar({ selectedCategory = "All", onSelectCategory }: CategoryBarProps) {
+export function CategoryBar({ selectedCategory = "all", onSelectCategory }: CategoryBarProps) {
   return (
-    <div className="w-full flex items-center justify-between gap-4 py-8 overflow-x-auto no-scrollbar">
-      <div className="flex items-center gap-8 min-w-max mx-auto px-4">
+    <div className="w-full flex items-center justify-center gap-2 py-6 overflow-x-auto no-scrollbar">
+      <div className="flex items-center gap-2 md:gap-4 min-w-max px-4">
         {CATEGORIES.map((cat) => {
           const Icon = cat.icon;
-          const isSelected = selectedCategory === cat.name;
+          const isSelected = selectedCategory === cat.value;
           return (
             <button
-              key={cat.name}
-              onClick={() => onSelectCategory(cat.name)}
+              key={cat.value}
+              onClick={() => onSelectCategory(cat.value)}
               className={cn(
-                "flex flex-col items-center gap-2 group transition-all",
-                isSelected ? "text-gray-900 border-b-2 border-gray-900 pb-2" : "text-gray-500 hover:text-gray-900 pb-2 border-b-2 border-transparent hover:border-gray-300"
+                "flex items-center gap-2 px-4 py-2.5 rounded-full transition-all duration-200 font-medium text-sm",
+                isSelected 
+                  ? "bg-[#D4AF37] text-white shadow-md shadow-[#D4AF37]/30" 
+                  : "bg-white text-gray-600 hover:bg-gray-50 border border-gray-200 hover:border-[#D4AF37]/50 hover:text-gray-900"
               )}
             >
-              <Icon className={cn("h-6 w-6 transition-transform group-hover:scale-110", isSelected && "scale-110")} strokeWidth={1.5} />
-              <span className="text-xs font-semibold whitespace-nowrap">{cat.name}</span>
+              {Icon && <Icon className="h-4 w-4" strokeWidth={2} />}
+              <span>{cat.name}</span>
             </button>
           );
         })}
-      </div>
-      
-      {/* Filter Button (Desktop) */}
-      <div className="hidden md:block pl-4 border-l">
-         <Button variant="outline" className="gap-2 rounded-xl border-gray-300 text-xs font-semibold h-10 px-4">
-           <span className="text-base">⚙️</span> Filters
-         </Button>
       </div>
     </div>
   );
