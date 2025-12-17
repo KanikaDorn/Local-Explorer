@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getTransactionsByRef } from "@/lib/payway";
+import { getTransactionsByRef, PayWayCheckTransactionResponse } from "@/lib/payway";
 import { createErrorResponse, createSuccessResponse } from "@/lib/utils";
 import { createSupabaseServiceRole } from "@/lib/supabaseClient";
 
@@ -12,15 +12,17 @@ export async function POST(req: NextRequest) {
         }
 
         // Call PayWay API to check status
-        const paywayResponse = await getTransactionsByRef(tran_id);
+        const paywayResponse = await getTransactionsByRef(tran_id) as PayWayCheckTransactionResponse;
 
-        if (paywayResponse.status.code !== "00") {
+        const rawStatus = paywayResponse.status as any;
+        
+        if (rawStatus.code !== "00" && rawStatus !== 0) {
              // 00 is Success for this endpoint as per examples
              console.error("PayWay Check Transaction Error:", paywayResponse);
              // It might be legal error (e.g. no transactions found yet), let's just return what we have
              return NextResponse.json(createSuccessResponse({ 
                  status: "PENDING", 
-                 details: paywayResponse.status.message 
+                 details: rawStatus.message || "Unknown Status"
              }));
         }
 

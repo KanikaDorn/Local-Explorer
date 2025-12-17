@@ -101,7 +101,12 @@ export async function POST(req: NextRequest) {
                 console.log("Payment status: completed (status.code === '00')");
             } else if (checkData.data) {
                 // Check data object for payment status
-                const transactionData: PayWayTransactionData = checkData.data;
+                const transactionData: PayWayTransactionData | undefined = checkData.data?.[0]; // Access first item from array
+                
+                if (!transactionData) {
+                    console.error("No transaction data found in check response");
+                    // Handle missing data
+                } else {
                 paymentStatusCode = transactionData.payment_status_code;
                 paymentStatusMessage = transactionData.payment_status;
                 paymentAmount = transactionData.payment_amount;
@@ -122,6 +127,7 @@ export async function POST(req: NextRequest) {
                 } else {
                     paymentStatus = "failed";
                     console.log(`Payment status: failed (payment_status_code: ${paymentStatusCode}, payment_status: ${transactionData.payment_status})`);
+                }
                 }
             } else {
                 // If we can't determine status, check the initial status from return data

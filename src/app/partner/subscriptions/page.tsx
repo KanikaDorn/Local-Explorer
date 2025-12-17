@@ -5,9 +5,10 @@ import Link from "next/link";
 import apiFetch from "@/lib/apiClient";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Check, CreditCard, Zap, Shield } from "lucide-react";
+import { Check, CreditCard, Zap, Shield, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import supabaseBrowser from "@/lib/supabaseClient";
+import { PaymentProcessingModal } from "@/components/PaymentProcessingModal";
 
 interface SubscriptionPlan {
   id: string;
@@ -98,33 +99,52 @@ export default function PartnerSubscriptions() {
     useState<CurrentSubscription | null>(null);
   const [loading, setLoading] = useState(true);
   const [upgrading, setUpgrading] = useState<Record<string, boolean>>({});
-  const { toast } = useToast();
-  const addToast = ({ message }: { message: string; duration?: number }) => toast({ title: message });
+  
+  // Modal State
+  const [modalOpen, setModalOpen] = useState(false);
+  const [paymentStatus, setPaymentStatus] = useState<"processing" | "requires_action" | "success" | "failed">("processing");
+  const [paymentData, setPaymentData] = useState<any>(null);
 
+  const { toast } = useToast();
   const [user, setUser] = useState<any>(null);
+
+  // Check for payment callback status in URL
+  useEffect(() => {
+     if (typeof window !== "undefined") {
+         const params = new URLSearchParams(window.location.search);
+         const status = params.get("status");
+         const tranId = params.get("tran_id");
+         
+         if (status === "success" && tranId) {
+             setPaymentStatus("success");
+             setModalOpen(true);
+             // Verify explicitly to be sure
+             apiFetch(`/api/transactions/${tranId}`).then(res => {
+                 setPaymentData(res);
+             });
+             // Clean URL
+             window.history.replaceState({}, "", "/partner/subscriptions");
+         } else if (status === "failed") {
+             setPaymentStatus("failed");
+             setModalOpen(true);
+             window.history.replaceState({}, "", "/partner/subscriptions");
+         }
+     }
+  }, []);
 
   useEffect(() => {
     const loadData = async () => {
+      // ... (keep existing loadData logic)
       try {
-        // Load user
         const { data: { user: currentUser } } = await supabaseBrowser.auth.getUser();
         setUser(currentUser);
 
-        // Load subscriptions
         const res = await apiFetch("/api/partner/subscriptions");
         if (res?.success) {
-          if (res.data?.plans) {
-            setPlans(res.data.plans);
-          }
+          if (res.data?.plans) setPlans(res.data.plans);
           if (res.data?.current) {
-            setCurrentSubscription(res.data.current);
-            // Mark current plan
-            setPlans((prev) =>
-              prev.map((p) => ({
-                ...p,
-                isCurrentPlan: p.id === res.data.current.planId,
-              }))
-            );
+             setCurrentSubscription(res.data.current);
+             setPlans((prev) => prev.map((p) => ({ ...p, isCurrentPlan: p.id === res.data.current.planId })));
           }
         }
       } catch (err) {
@@ -137,101 +157,119 @@ export default function PartnerSubscriptions() {
     loadData();
   }, []);
 
-  const handleUpgrade = async (planId: string) => {
-    console.log("Starting upgrade for plan:", planId);
-    setUpgrading((prev) => ({ ...prev, [planId]: true }));
+  const verifyPayment = async () => {
+      // Manual verification trigger
+      if (paymentStatus === 'success') {
+          setModalOpen(false);
+          return;
+      }
+      
+      if (!paymentData?.transactionId && !paymentData?.tran_id) return;
+      const tid = paymentData?.transactionId || paymentData?.tran_id;
+
+      try {
+          const res = await apiFetch(`/api/transactions/${tid}`);
+          if (res && (res.status === 'completed' || res.status === 'approved' || res.payment_status === 'APPROVED')) {
+              setPaymentStatus("success");
+              toast({ title: "Payment Successful!" });
+          } else {
+              toast({ title: "Payment not yet confirmed", description: "If you just paid, please wait a moment.", variant: "default" });
+          }
+      } catch (e) {
+          console.error("Verify error:", e);
+      }
+  };
+
+  const handleUpgrade = async (plan: SubscriptionPlan) => {
+    console.log("Starting upgrade for plan:", plan.id);
+    setUpgrading((prev) => ({ ...prev, [plan.id]: true }));
+    setPaymentStatus("processing");
+    setModalOpen(true);
+
     try {
       if (!user) {
-        console.warn("User not logged in");
-        addToast({ message: "Please log in first" });
+        setModalOpen(false);
+        toast({ title: "Please log in first" });
         return;
       }
 
-      // 1. Create Subscription Intent
-      console.log("Creating subscription intent...");
-      const intentRes = await apiFetch("/api/partner/subscriptions/intent", {
+      const returnParams = JSON.stringify({
+          userUuid: user.id,
+          planId: plan.id
+      });
+
+      // 1. Get Payment Session (Server-Side Proxy)
+      const res = await apiFetch("/api/checkout", {
         method: "POST",
-        body: JSON.stringify({ planId, interval: "month" }),
+        body: JSON.stringify({
+          amount: plan.price.toString(),
+          currency: plan.currency,
+          firstname: user.user_metadata?.full_name?.split(' ')[0] || "Partner",
+          lastname: user.user_metadata?.full_name?.split(' ').slice(1).join(' ') || "User",
+          email: user.email,
+          phone: user.phone || "000000000",
+          items: [{ name: `Subscription - ${plan.name}`, quantity: 1, price: plan.price }],
+          payment_option: "cards", // This seems to return QR image too based on logs
+          return_params: returnParams
+        }),
       });
 
-      console.log("Intent Response:", intentRes);
+      console.log("Checkout Response:", res);
 
-      if (!intentRes?.success) {
-          throw new Error(intentRes?.error || "Failed to create subscription");
+      if (res?.success === false || res?.error) {
+        throw new Error(res?.error || "Payment initialization failed");
       }
       
-      const { subscriptionId, amount } = intentRes.data;
-      console.log("Subscription created:", subscriptionId);
-
-      // 2. Initialize Card Linking (CoF)
-      console.log("Initializing Card Linking...");
-      const cofRes = await apiFetch("/api/payway/cards/initial", {
-          method: "POST",
-          body: JSON.stringify({ subscriptionId })
-      });
+      // 2. Handle Response
+      // We expect 'qrImage', 'qrString', 'abapay_deeplink' directly in 'res'
       
-      console.log("CoF Response:", cofRes);
-
-      if (!cofRes?.success) {
-           throw new Error(cofRes?.error || "Failed to initialize card payment");
+      if (res.qrImage) {
+          setPaymentData(res);
+          setPaymentStatus("requires_action");
+      } else if (res.qrString) {
+          // If we have string but no image, we can try to use it? 
+          // For now, let's assume image comes if string comes (usually does)
+           setPaymentData(res);
+           setPaymentStatus("requires_action");
+      } else if (res.abapay_deeplink) {
+           // Mobile fallback?
+           setPaymentData(res);
+           setPaymentStatus("requires_action");
+      } else {
+           throw new Error("No payment QR or Link received");
       }
-
-      const { actionUrl, fields } = cofRes.data;
-
-      addToast({
-          message: "Opening secure payment window...",
-          duration: 2000,
-      });
-
-      // 3. Submit Form to PayWay (Hidden Form)
-      console.log("Submitting form to:", actionUrl);
-      const form = document.createElement("form");
-      form.method = "POST";
-      form.action = actionUrl; 
-      
-      Object.keys(fields).forEach((key) => {
-          const input = document.createElement("input");
-          input.type = "hidden";
-          input.name = key;
-          input.value = fields[key];
-          form.appendChild(input);
-          
-          if (key === 'ctid') {
-             console.log("CTID being sent to PayWay:", fields[key]);
-          }
-      });
-
-      document.body.appendChild(form);
-      
-      // Delay submit slightly to allow logs to flush and detach from current microtask
-      setTimeout(() => {
-          form.submit();
-      }, 100);
 
     } catch (err: any) {
       console.error("Error upgrading:", err);
-      // Fallback alert ensures the user sees something went wrong
-      // alert(`Error: ${err.message || "Something went wrong"}`); 
-      addToast({
-        message: err.message || "Error upgrading plan",
-        duration: 3000,
+      toast({
+        title: "Upgrade Failed",
+        description: err.message || "Something went wrong",
+        variant: "destructive",
       });
+      setModalOpen(false); 
     } finally {
-        // Reset state only on error. Success navigates away.
-        setTimeout(() => setUpgrading((prev) => ({ ...prev, [planId]: false })), 3000);
+        setUpgrading((prev) => ({ ...prev, [plan.id]: false }));
     }
   };
 
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-600"></div>
+        <Loader2 className="animate-spin h-8 w-8 text-blue-600" />
       </div>
     );
   }
 
   return (
     <div>
+      <PaymentProcessingModal 
+         isOpen={modalOpen}
+         onClose={() => setModalOpen(false)}
+         status={paymentStatus}
+         paymentData={paymentData}
+         onVerify={verifyPayment}
+      />
+
       <div className="mb-8">
         <h1 className="text-4xl font-bold mb-2">Subscription Plans</h1>
         <p className="text-gray-600">
@@ -323,7 +361,7 @@ export default function PartnerSubscriptions() {
               ) : (
                 <>
                   <Button
-                    onClick={() => handleUpgrade(plan.id)}
+                    onClick={() => handleUpgrade(plan)}
                     disabled={upgrading[plan.id]}
                     className={`w-full mb-6 relative group overflow-hidden ${
                       plan.recommended
@@ -332,11 +370,11 @@ export default function PartnerSubscriptions() {
                     }`}
                   >
                     <CreditCard className="w-4 h-4 mr-2" />
-                    {upgrading[plan.id] ? "Securely Linking..." : "Subscribe with Card"}
+                    {upgrading[plan.id] ? "Processing..." : "Subscribe"}
                   </Button>
                   <div className="text-center mb-6">
                     <p className="text-xs text-gray-400 flex items-center justify-center gap-1">
-                      <Shield className="w-3 h-3" /> Secured by PayWay (Visa/Mastercard)
+                      <Shield className="w-3 h-3" /> Secured by PayWay
                     </p>
                   </div>
                 </>

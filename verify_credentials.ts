@@ -1,4 +1,4 @@
-import { getReqTime, createPaymentLink, encryptRSA } from "./src/lib/payway";
+import { getReqTime, createPaymentLink } from "./src/lib/payway";
 import crypto from "crypto";
 
 // Load env vars manually for the script if not using next's loader

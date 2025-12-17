@@ -1,8 +1,12 @@
 "use client";
 
-import { X, MapPin } from "lucide-react";
+import { X, MapPin, Heart, Loader2 } from "lucide-react";
 import Image from "next/image";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { getCurrentUser, getUserProfile } from "@/lib/auth";
+import { addToBucketList } from "@/lib/bucketList";
+import { toast } from "@/hooks/use-toast";
 
 interface ExploreDetailModalProps {
   isOpen: boolean;
@@ -25,10 +29,15 @@ const categoryColors: Record<string, { bg: string; text: string }> = {
 };
 
 export const ExploreDetailModal = ({ isOpen, onClose, data }: ExploreDetailModalProps) => {
+  const router = useRouter();
+  const [isAdding, setIsAdding] = useState(false);
+  const [isAdded, setIsAdded] = useState(false);
+
   // Prevent scrolling when modal is open
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = "hidden";
+      setIsAdded(false); // Reset when modal opens
     } else {
       document.body.style.overflow = "unset";
     }
@@ -36,6 +45,45 @@ export const ExploreDetailModal = ({ isOpen, onClose, data }: ExploreDetailModal
       document.body.style.overflow = "unset";
     };
   }, [isOpen]);
+
+  const handleAddToBucketList = async () => {
+    if (!data) return;
+    
+    setIsAdding(true);
+    try {
+      const user = await getCurrentUser();
+      
+      if (!user) {
+        toast({
+          title: "Login Required",
+          description: "Please log in to add items to your bucket list.",
+          variant: "destructive"
+        });
+        router.push("/login?redirect=/explore");
+        return;
+      }
+
+      const profile = await getUserProfile(user.id);
+      const profileId = profile?.id || user.id;
+      
+      await addToBucketList(profileId, data.id);
+      
+      setIsAdded(true);
+      toast({
+        title: "Added to Bucket List! 🎉",
+        description: `${data.title} has been saved to your bucket list.`,
+      });
+    } catch (error) {
+      console.error("Error adding to bucket list:", error);
+      toast({
+        title: "Error",
+        description: "Could not add to bucket list. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsAdding(false);
+    }
+  };
 
   if (!isOpen || !data) return null;
 
@@ -107,10 +155,30 @@ export const ExploreDetailModal = ({ isOpen, onClose, data }: ExploreDetailModal
             {/* Action Button */}
             <div className="border-t border-gray-100 pt-6 mt-6">
               <button 
-                onClick={onClose}
-                className="w-full bg-[#D4AF37] text-white font-medium py-3.5 rounded-xl hover:bg-[#C5A028] transition-colors shadow-lg shadow-[#D4AF37]/20"
+                onClick={handleAddToBucketList}
+                disabled={isAdding || isAdded}
+                className={`w-full font-medium py-3.5 rounded-xl transition-colors shadow-lg flex items-center justify-center gap-2 ${
+                  isAdded 
+                    ? "bg-green-500 text-white shadow-green-500/20" 
+                    : "bg-[#D4AF37] text-white hover:bg-[#C5A028] shadow-[#D4AF37]/20"
+                } disabled:opacity-70`}
               >
-                Add to Bucket List
+                {isAdding ? (
+                  <>
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    Adding...
+                  </>
+                ) : isAdded ? (
+                  <>
+                    <Heart className="w-5 h-5 fill-current" />
+                    Added to Bucket List!
+                  </>
+                ) : (
+                  <>
+                    <Heart className="w-5 h-5" />
+                    Add to Bucket List
+                  </>
+                )}
               </button>
             </div>
           </div>

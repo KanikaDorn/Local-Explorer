@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { HeroCollage } from "@/components/HeroCollage";
 import { ArrowRight, Star } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 import { ExploreSection } from "@/components/ExploreSection";
 
 export default function Home() {
@@ -31,7 +32,9 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4">
            <div className="flex justify-between items-center mb-10">
               <h2 className="text-3xl font-bold font-serif">Latest Stories</h2>
-              <Button variant="outline" className="rounded-full">Read more articles</Button>
+              <Link href="/explore">
+                <Button variant="outline" className="rounded-full">Read more articles</Button>
+              </Link>
            </div>
 
            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">

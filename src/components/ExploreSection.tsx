@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { ExploreCard } from "./ExploreCard";
 import { ExploreDetailModal } from "./ExploreDetailModal";
 import { Button } from "./ui/button";
@@ -84,9 +85,11 @@ export const ExploreSection = () => {
            </p>
         </div>
         <div className="hidden md:block">
-          <Button variant="outline" className="rounded-full border-gray-300">
-            View all locations <ArrowRight className="ml-2 h-4 w-4" />
-          </Button>
+          <Link href="/explore">
+            <Button variant="outline" className="rounded-full border-gray-300">
+              View all locations <ArrowRight className="ml-2 h-4 w-4" />
+            </Button>
+          </Link>
         </div>
       </div>
 
